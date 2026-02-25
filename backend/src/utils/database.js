@@ -1,13 +1,13 @@
-import { query, transaction } from '../config/database.js';
- 
+const { query, transaction } = require('../config/database.js');
+
 // Generic CRUD operations
-export const DatabaseUtils = {
+const DatabaseUtils = {
   // Find single record
   async findOne(table, conditions = {}, select = '*') {
     const whereClause = Object.keys(conditions).map(key => `${key} = ?`).join(' AND ');
     const values = Object.values(conditions);
     const sql = `SELECT ${select} FROM ${table} WHERE ${whereClause} LIMIT 1`;
- 
+
     const results = await query(sql, values);
     return results.length > 0 ? results[0] : null;
   },
@@ -96,7 +96,7 @@ export const DatabaseUtils = {
 };
  
 // Database health check
-export const checkDatabaseHealth = async () => {
+const checkDatabaseHealth = async () => {
   try {
     const result = await query('SELECT 1 as health_check');
     return {
@@ -112,9 +112,9 @@ export const checkDatabaseHealth = async () => {
     };
   }
 };
- 
+
 // Get table statistics
-export const getTableStats = async (tableName) => {
+const getTableStats = async (tableName) => {
   try {
     const count = await DatabaseUtils.count(tableName);
     return {
@@ -126,12 +126,12 @@ export const getTableStats = async (tableName) => {
     throw new Error(`Failed to get stats for table ${tableName}: ${error.message}`);
   }
 };
- 
+
 // Validate database connection and required tables
-export const validateDatabaseSetup = async () => {
+const validateDatabaseSetup = async () => {
   const requiredTables = ['User', 'Election', 'Candidate', 'Votes', 'Otp'];
   const results = {};
- 
+  
   for (const table of requiredTables) {
     try {
       await query(`SELECT 1 FROM ${table} LIMIT 1`);
@@ -140,13 +140,19 @@ export const validateDatabaseSetup = async () => {
       results[table] = 'missing';
     }
   }
- 
+  
   const allTablesExist = Object.values(results).every(status => status === 'exists');
- 
+  
   return {
     allTablesExist,
     tables: results,
     checkedAt: new Date().toISOString()
   };
 };
- 
+
+module.exports = {
+  DatabaseUtils,
+  checkDatabaseHealth,
+  getTableStats,
+  validateDatabaseSetup
+};
