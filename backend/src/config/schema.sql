@@ -67,6 +67,7 @@ CREATE TABLE `Candidate` (
   `party` varchar(100),
   `platform` text,
   `photoUrl` varchar(255),
+  `position` varchar(50) DEFAULT NULL COMMENT 'Specific position (Barangay Captain, Councilor, SK Chairman, SK Councilor)',
   `voteCount` int DEFAULT 0 COMMENT 'Total votes received',
   `isActive` tinyint(1) DEFAULT 1 COMMENT 'Candidate status',
   `createdAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -75,6 +76,7 @@ CREATE TABLE `Candidate` (
   KEY `idx_electionId` (`electionId`),
   KEY `idx_name` (`name`),
   KEY `idx_voteCount` (`voteCount`),
+  KEY `idx_position` (`position`),
   FOREIGN KEY (`electionId`) REFERENCES `Election` (`electionId`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Candidates table';
  
@@ -155,16 +157,37 @@ GROUP BY e.electionId, e.title, e.totalVoters, e.totalVotesCast, e.startTime, e.
  
 -- Insert default admin user (password: admin123)
 INSERT INTO `User` (`vin`, `fullname`, `email`, `password`, `role`, `emailVerified`) 
-VALUES ('ADMIN001', 'System Administrator', 'admin@voting.app', '$2b$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', 'admin', 1);
+VALUES ('ADMIN001', 'System Administrator', 'admin@voting.app', '$2b$10$rOzJqQjQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', 'admin', 1);
  
 -- Sample election data (for testing)
 INSERT INTO `Election` (`title`, `description`, `type`, `status`, `startTime`, `endTime`, `maxVotesPerVoter`) 
-VALUES ('Student Council Election 2025', 'Annual student council election for the academic year 2025-2026', 'general', 'upcoming', '2025-03-01 09:00:00', '2025-03-01 17:00:00', 1);
+VALUES 
+('Barangay Election 2026', 'Barangay-level election for Barangay Captain and Councilors', 'local', 'upcoming', '2026-05-15 07:00:00', '2026-05-15 15:00:00', 8),
+('SK Chairman Election 2026', 'Sangguniang Kabataan Chairman election for youth representation', 'special', 'upcoming', '2026-05-15 07:00:00', '2026-05-15 15:00:00', 1),
+('SK Councilors Election 2026', 'Sangguniang Kabataan Councilors election for youth representation', 'special', 'upcoming', '2026-05-15 07:00:00', '2026-05-15 15:00:00', 7);
  
 -- Sample candidates (for testing)
-INSERT INTO `Candidate` (`electionId`, `name`, `description`, `party`) 
-VALUES (1, 'John Smith', 'Computer Science major, focused on academic excellence and student welfare', 'Tech Party'),
-       (1, 'Jane Doe', 'Business Administration major, advocating for student rights and campus improvements', 'Progressive Party');
+INSERT INTO `Candidate` (`electionId`, `name`, `description`, `party`, `position`) 
+VALUES 
+-- Barangay Election candidates (Captain + 7 Councilors)
+(1, 'Juan Dela Cruz', 'Experienced community leader with 10+ years service', 'Partido ng Barangay', 'Barangay Captain'),
+(1, 'Maria Santos', 'Education advocate and youth development champion', 'Barangay Progressive Party', 'Barangay Councilor'),
+(1, 'Carlos Reyes', 'Infrastructure and public services expert', 'Citizens Action Party', 'Barangay Councilor'),
+(1, 'Elena Garcia', 'Healthcare and senior citizens welfare advocate', 'Community First Party', 'Barangay Councilor'),
+(1, 'Antonio "Tony" Santos', 'Youth empowerment and education reform advocate', 'Youth Alliance Party', 'Barangay Councilor'),
+(1, 'Patricia "Pat" Reyes', 'Sports development and skills training champion', 'Kabataan First Movement', 'Barangay Councilor'),
+(1, 'Marco "Mark" Villanueva', 'Youth sports development and recreation programs', 'Youth Sports Party', 'Barangay Councilor'),
+(1, 'Sarah "Say" Lim', 'Education and scholarship programs advocate', 'Kabataan Edu-First', 'Barangay Councilor'),
+-- SK Chairman Election candidates
+(2, 'Ricky "Ric" Torres', 'Environmental protection and climate action', 'Green Youth Movement', 'SK Chairman'),
+(2, 'Anna "Anne" Cruz', 'Women empowerment and gender equality', 'Young Women\'s Alliance', 'SK Chairman'),
+-- SK Councilors Election candidates
+(3, 'Dennis "Den" Santos', 'Technology and digital literacy for youth', 'Tech Youth Philippines', 'SK Councilor'),
+(3, 'Liza "Li" Garcia', 'Health and wellness programs for young people', 'Healthy Youth Party', 'SK Councilor'),
+(3, 'James "Jim" Reyes', 'Arts and culture development advocate', 'Creative Youth Movement', 'SK Councilor'),
+(3, 'Roberto "Bert" Mendoza', 'Agricultural development and rural youth programs', 'Kabataan Farmers Alliance', 'SK Councilor'),
+(3, 'Catherine "Cathy" Flores', 'Senior citizens welfare and elderly care programs', 'Elderly Care Youth Party', 'SK Councilor'),
+(3, 'Michael "Mike" Tan', 'Business and entrepreneurship development for youth', 'Young Entrepreneurs Party', 'SK Councilor');
  
 -- Create trigger to update vote count when a vote is cast
 DELIMITER $$

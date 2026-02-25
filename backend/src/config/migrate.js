@@ -76,53 +76,31 @@ const seedDatabase = async () => {
       console.log('👤 Admin user created');
     }
 
-    // Check if sample election exists
-    const electionExists = await query('SELECT COUNT(*) as count FROM Election WHERE title = ?', ['Student Council Election 2026']);
-
-    if (electionExists[0].count === 0) {
-      // Insert sample election
-      const electionResult = await query(
-        'INSERT INTO Election (title, description, type, status, startTime, endTime, maxVotesPerVoter) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        ['Student Council Election 2026', 'Annual student council election for the academic year 2024-2025', 'general', 'upcoming', '2024-03-01 09:00:00', '2024-03-01 17:00:00', 1],
-        true
-      );
-
-      const electionId = electionResult.insertId;
-
-      // Insert sample candidates
-      await query(
-        'INSERT INTO Candidate (electionId, name, description, party) VALUES (?, ?, ?, ?), (?, ?, ?, ?)',
-        [
-          electionId, 'John Smith', 'Computer Science major, focused on academic excellence and student welfare', 'Tech Party',
-          electionId, 'Jane Doe', 'Business Administration major, advocating for student rights and campus improvements', 'Progressive Party'
-        ],
-        true
-      );
-
-      console.log('🗳️  Sample election and candidates created');
-    }
-
     // Create Barangay Election
     const barangayElectionExists = await query('SELECT COUNT(*) as count FROM Election WHERE title = ?', ['Barangay Election 2026']);
 
     if (barangayElectionExists[0].count === 0) {
-      // Insert barangay election
+      // Insert barangay election (Captain + 7 Councilors = 8 positions)
       const barangayElectionResult = await query(
         'INSERT INTO Election (title, description, type, status, startTime, endTime, maxVotesPerVoter) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        ['Barangay Election 2026', 'Barangay-level election for Barangay Captain and Councilors', 'local', 'upcoming', '2026-05-15 07:00:00', '2026-05-15 15:00:00', 1],
+        ['Barangay Election 2026', 'Barangay-level election for Barangay Captain and Councilors', 'local', 'upcoming', '2026-05-15 07:00:00', '2026-05-15 15:00:00', 8],
         true
       );
 
       const barangayElectionId = barangayElectionResult.insertId;
 
-      // Insert barangay candidates
+      // Insert barangay candidates (Captain + 7 Councilors)
       await query(
-        'INSERT INTO Candidate (electionId, name, description, party) VALUES (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?)',
+        'INSERT INTO Candidate (electionId, name, description, party) VALUES (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?)',
         [
           barangayElectionId, 'Juan Dela Cruz', 'Experienced community leader with 10+ years service', 'Partido ng Barangay',
           barangayElectionId, 'Maria Santos', 'Education advocate and youth development champion', 'Barangay Progressive Party',
           barangayElectionId, 'Carlos Reyes', 'Infrastructure and public services expert', 'Citizens Action Party',
-          barangayElectionId, 'Elena Garcia', 'Healthcare and senior citizens welfare advocate', 'Community First Party'
+          barangayElectionId, 'Elena Garcia', 'Healthcare and senior citizens welfare advocate', 'Community First Party',
+          barangayElectionId, 'Antonio "Tony" Santos', 'Youth empowerment and education reform advocate', 'Youth Alliance Party',
+          barangayElectionId, 'Patricia "Pat" Reyes', 'Sports development and skills training champion', 'Kabataan First Movement',
+          barangayElectionId, 'Marco "Mark" Villanueva', 'Youth sports development and recreation programs', 'Youth Sports Party',
+          barangayElectionId, 'Sarah "Say" Lim', 'Education and scholarship programs advocate', 'Kabataan Edu-First'
         ],
         true
       );
@@ -154,6 +132,37 @@ const seedDatabase = async () => {
       );
 
       console.log('👥 SK Chairman election and candidates created');
+    }
+
+    // Create SK Councilors Election
+    const skCouncilorsElectionExists = await query('SELECT COUNT(*) as count FROM Election WHERE title = ?', ['SK Councilors Election 2026']);
+
+    if (skCouncilorsElectionExists[0].count === 0) {
+      // Insert SK Councilors election
+      const skCouncilorsElectionResult = await query(
+        'INSERT INTO Election (title, description, type, status, startTime, endTime, maxVotesPerVoter) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        ['SK Councilors Election 2026', 'Sangguniang Kabataan Councilors election for youth representation', 'special', 'upcoming', '2026-05-15 07:00:00', '2026-05-15 15:00:00', 7],
+        true
+      );
+
+      const skCouncilorsElectionId = skCouncilorsElectionResult.insertId;
+
+      // Insert SK Councilors candidates (7 positions)
+      await query(
+        'INSERT INTO Candidate (electionId, name, description, party) VALUES (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?)',
+        [
+          skCouncilorsElectionId, 'Marco "Mark" Villanueva', 'Youth sports development and recreation programs', 'Youth Sports Party',
+          skCouncilorsElectionId, 'Sarah "Say" Lim', 'Education and scholarship programs advocate', 'Kabataan Edu-First',
+          skCouncilorsElectionId, 'Ricky "Ric" Torres', 'Environmental protection and climate action', 'Green Youth Movement',
+          skCouncilorsElectionId, 'Anna "Anne" Cruz', 'Women empowerment and gender equality', 'Young Women\'s Alliance',
+          skCouncilorsElectionId, 'Dennis "Den" Santos', 'Technology and digital literacy for youth', 'Tech Youth Philippines',
+          skCouncilorsElectionId, 'Liza "Li" Garcia', 'Health and wellness programs for young people', 'Healthy Youth Party',
+          skCouncilorsElectionId, 'James "Jim" Reyes', 'Arts and culture development advocate', 'Creative Youth Movement'
+        ],
+        true
+      );
+
+      console.log('👥 SK Councilors election and candidates created');
     }
 
     console.log('✅ Database seeding completed!');
