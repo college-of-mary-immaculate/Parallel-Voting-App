@@ -1,9 +1,8 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { query, initializeDatabase } from './database.js';
+const fs = require('fs');
+const path = require('path');
+const { query, initializeDatabase } = require('./database.js');
  
-const __filename = fileURLToPath(import.meta.url);
+const __filename = path.resolve(__filename);
 const __dirname = path.dirname(__filename);
  
 // Read and execute SQL schema file
@@ -187,9 +186,9 @@ const setupDatabase = async () => {
 };
  
 // Export functions for use in other modules
-export { runMigration, seedDatabase, setupDatabase };
- 
+module.exports = { runMigration, seedDatabase, setupDatabase };
+
 // Run setup if this file is executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (require.main === module) {
   setupDatabase();
 }
