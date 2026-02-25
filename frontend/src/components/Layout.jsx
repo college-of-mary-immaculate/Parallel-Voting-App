@@ -1,10 +1,16 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useAuthStore } from '../store';
 
 const Layout = ({ children }) => {
   const location = useLocation();
+  const { user, isAuthenticated, logout } = useAuthStore();
   
   const isActive = (path) => {
     return location.pathname === path;
+  };
+
+  const handleLogout = () => {
+    logout();
   };
 
   return (
@@ -40,18 +46,34 @@ const Layout = ({ children }) => {
               </nav>
             </div>
             <div className="flex items-center">
-              <Link
-                to="/login"
-                className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                className="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Register
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <span className="text-gray-700 mr-4">
+                    Welcome, {user?.name}
+                  </span>
+                  <button
+                    onClick={handleLogout}
+                    className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Register
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
