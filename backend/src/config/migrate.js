@@ -75,20 +75,20 @@ const seedDatabase = async () => {
       );
       console.log('👤 Admin user created');
     }
- 
+
     // Check if sample election exists
-    const electionExists = await query('SELECT COUNT(*) as count FROM Election WHERE title = ?', ['Student Council Election 2024']);
- 
+    const electionExists = await query('SELECT COUNT(*) as count FROM Election WHERE title = ?', ['Student Council Election 2026']);
+
     if (electionExists[0].count === 0) {
       // Insert sample election
       const electionResult = await query(
         'INSERT INTO Election (title, description, type, status, startTime, endTime, maxVotesPerVoter) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        ['Student Council Election 2024', 'Annual student council election for the academic year 2024-2025', 'general', 'upcoming', '2024-03-01 09:00:00', '2024-03-01 17:00:00', 1],
+        ['Student Council Election 2026', 'Annual student council election for the academic year 2024-2025', 'general', 'upcoming', '2024-03-01 09:00:00', '2024-03-01 17:00:00', 1],
         true
       );
- 
+
       const electionId = electionResult.insertId;
- 
+
       // Insert sample candidates
       await query(
         'INSERT INTO Candidate (electionId, name, description, party) VALUES (?, ?, ?, ?), (?, ?, ?, ?)',
@@ -98,12 +98,66 @@ const seedDatabase = async () => {
         ],
         true
       );
- 
+
       console.log('🗳️  Sample election and candidates created');
     }
- 
+
+    // Create Barangay Election
+    const barangayElectionExists = await query('SELECT COUNT(*) as count FROM Election WHERE title = ?', ['Barangay Election 2026']);
+
+    if (barangayElectionExists[0].count === 0) {
+      // Insert barangay election
+      const barangayElectionResult = await query(
+        'INSERT INTO Election (title, description, type, status, startTime, endTime, maxVotesPerVoter) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        ['Barangay Election 2026', 'Barangay-level election for Barangay Captain and Councilors', 'local', 'upcoming', '2026-05-15 07:00:00', '2026-05-15 15:00:00', 1],
+        true
+      );
+
+      const barangayElectionId = barangayElectionResult.insertId;
+
+      // Insert barangay candidates
+      await query(
+        'INSERT INTO Candidate (electionId, name, description, party) VALUES (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?)',
+        [
+          barangayElectionId, 'Juan Dela Cruz', 'Experienced community leader with 10+ years service', 'Partido ng Barangay',
+          barangayElectionId, 'Maria Santos', 'Education advocate and youth development champion', 'Barangay Progressive Party',
+          barangayElectionId, 'Carlos Reyes', 'Infrastructure and public services expert', 'Citizens Action Party',
+          barangayElectionId, 'Elena Garcia', 'Healthcare and senior citizens welfare advocate', 'Community First Party'
+        ],
+        true
+      );
+
+      console.log('🏘️  Barangay election and candidates created');
+    }
+
+    // Create SK Chairman Election
+    const skElectionExists = await query('SELECT COUNT(*) as count FROM Election WHERE title = ?', ['SK Chairman Election 2026']);
+
+    if (skElectionExists[0].count === 0) {
+      // Insert SK election
+      const skElectionResult = await query(
+        'INSERT INTO Election (title, description, type, status, startTime, endTime, maxVotesPerVoter) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        ['SK Chairman Election 2026', 'Sangguniang Kabataan Chairman election for youth representation', 'special', 'upcoming', '2026-05-15 07:00:00', '2026-05-15 15:00:00', 1],
+        true
+      );
+
+      const skElectionId = skElectionResult.insertId;
+
+      // Insert SK candidates
+      await query(
+        'INSERT INTO Candidate (electionId, name, description, party) VALUES (?, ?, ?, ?), (?, ?, ?, ?)',
+        [
+          skElectionId, 'Antonio "Tony" Santos', 'Youth empowerment and education reform advocate', 'Youth Alliance Party',
+          skElectionId, 'Patricia "Pat" Reyes', 'Sports development and skills training champion', 'Kabataan First Movement'
+        ],
+        true
+      );
+
+      console.log('👥 SK Chairman election and candidates created');
+    }
+
     console.log('✅ Database seeding completed!');
- 
+
   } catch (error) {
     console.error('❌ Seeding failed:', error.message);
     throw error;
