@@ -180,7 +180,7 @@ VALUES
 (1, 'Sarah "Say" Lim', 'Education and scholarship programs advocate', 'Kabataan Edu-First', 'Barangay Councilor'),
 -- SK Chairman Election candidates
 (2, 'Ricky "Ric" Torres', 'Environmental protection and climate action', 'Green Youth Movement', 'SK Chairman'),
-(2, 'Anna "Anne" Cruz', 'Women empowerment and gender equality', 'Young Women\'s Alliance', 'SK Chairman'),
+(2, 'Anna "Anne" Cruz', 'Women empowerment and gender equality', 'Young Women\s Alliance', 'SK Chairman'),
 -- SK Councilors Election candidates
 (3, 'Dennis "Den" Santos', 'Technology and digital literacy for youth', 'Tech Youth Philippines', 'SK Councilor'),
 (3, 'Liza "Li" Garcia', 'Health and wellness programs for young people', 'Healthy Youth Party', 'SK Councilor'),
