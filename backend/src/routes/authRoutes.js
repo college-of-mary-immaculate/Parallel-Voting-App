@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const validator = require('validator');
 const { v4: uuidv4 } = require('uuid');
+const jwt = require('jsonwebtoken');
 const { query } = require('../config/database');
 
 const router = express.Router();
@@ -140,6 +141,113 @@ router.post('/register', validateRegistration, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Registration failed. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Validation middleware for login
+const validateLogin = (req, res, next) => {
+  const { email, password } = req.body;
+  
+  const errors = [];
+  
+  // Email validation
+  if (!email) {
+    errors.push('Email is required');
+  } else if (!validator.isEmail(email)) {
+    errors.push('Please provide a valid email address');
+  }
+  
+  // Password validation
+  if (!password) {
+    errors.push('Password is required');
+  }
+  
+  if (errors.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Validation failed',
+      errors
+    });
+  }
+  
+  next();
+};
+
+// Generate JWT token
+const generateToken = (user) => {
+  const payload = {
+    userId: user.userId,
+    email: user.email,
+    role: user.role,
+    vin: user.vin
+  };
+  
+  return jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '24h'
+  });
+};
+
+// POST /api/auth/login
+router.post('/login', validateLogin, async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Find user by email
+    const users = await query(
+      'SELECT userId, vin, fullname, email, password, role, isActive, emailVerified FROM User WHERE email = ?',
+      [email]
+    );
+    
+    if (users.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+    
+    const user = users[0];
+    
+    // Check if user is active
+    if (!user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'Account is deactivated. Please contact administrator.'
+      });
+    }
+    
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+    
+    // Generate JWT token
+    const token = generateToken(user);
+    
+    // Remove password from user object
+    delete user.password;
+    
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        user,
+        token,
+        expiresIn: process.env.JWT_EXPIRES_IN || '24h'
+      }
+    });
+    
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Login failed. Please try again.',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
