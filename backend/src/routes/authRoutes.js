@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const validator = require('validator');
 const { v4: uuidv4 } = require('uuid');
-const jwt = require('jsonwebtoken');
+const { generateToken, verifyToken, extractTokenFromHeader } = require('../utils/jwtUtils');
 const { query } = require('../config/mockDatabase');
 
 const router = express.Router();
@@ -175,20 +175,6 @@ const validateLogin = (req, res, next) => {
   next();
 };
 
-// Generate JWT token
-const generateToken = (user) => {
-  const payload = {
-    userId: user.userId,
-    email: user.email,
-    role: user.role,
-    vin: user.vin
-  };
-  
-  return jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '24h'
-  });
-};
-
 // POST /api/auth/login
 router.post('/login', validateLogin, async (req, res) => {
   try {
@@ -227,8 +213,15 @@ router.post('/login', validateLogin, async (req, res) => {
       });
     }
     
-    // Generate JWT token
-    const token = generateToken(user);
+    // Generate JWT token using utility
+    const payload = {
+      userId: user.userId,
+      email: user.email,
+      role: user.role,
+      vin: user.vin
+    };
+    
+    const token = generateToken(payload);
     
     // Remove password from user object
     delete user.password;
