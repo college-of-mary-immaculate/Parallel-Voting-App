@@ -1,20 +1,25 @@
 import express from 'express';
-import { initializeDatabase } from './src/config/database.js';
-import { validateDatabaseSetup, checkDatabaseHealth } from './src/utils/database.js';
+import { initializeDatabase } from './config/database.js';
+import { validateDatabaseSetup, checkDatabaseHealth } from './utils/database.js';
 import 'dotenv/config.js';
- 
+import authRoutes from './routes/authRoutes.js';
+
 const app = express();
 const port = process.env.API_PORT || 5000;
- 
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
- 
+
+// Routes
+app.use('/api/auth', authRoutes);
+
 // Health check endpoint
 app.get('/health', async (req, res) => {
   try {
     const dbHealth = await checkDatabaseHealth();
     const dbSetup = await validateDatabaseSetup();
+
  
     res.json({
       status: 'ok',
