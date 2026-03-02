@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const validator = require('validator');
 const { v4: uuidv4 } = require('uuid');
 const jwt = require('jsonwebtoken');
-const { query } = require('../config/database');
+const { query } = require('../config/mockDatabase');
 
 const router = express.Router();
 
