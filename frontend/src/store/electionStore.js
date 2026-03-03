@@ -1,6 +1,7 @@
 import { create } from 'zustand';
+import { electionsAPI, votingAPI, resultsAPI } from '../services';
 
-const useElectionStore = create((set) => ({
+const useElectionStore = create((set, get) => ({
   // Elections state
   elections: [],
   currentElection: null,
@@ -13,39 +14,22 @@ const useElectionStore = create((set) => ({
   fetchElections: async () => {
     set({ isLoading: true, error: null });
     try {
-      // Mock data - replace with actual API
-      const mockElections = [
-        {
-          id: 1,
-          title: 'Student Council Election 2024',
-          description: 'Vote for your student council representatives',
-          status: 'active',
-          startDate: '2024-03-01',
-          endDate: '2024-03-15',
-          candidates: [
-            { id: 1, name: 'John Doe', position: 'President', department: 'Computer Science' },
-            { id: 2, name: 'Jane Smith', position: 'President', department: 'Business Administration' },
-            { id: 3, name: 'Mike Brown', position: 'President', department: 'Engineering' }
-          ]
-        },
-        {
-          id: 2,
-          title: 'Club Representatives Election',
-          description: 'Vote for club representatives',
-          status: 'upcoming',
-          startDate: '2024-03-20',
-          endDate: '2024-03-25',
-          candidates: []
-        }
-      ];
+      const result = await electionsAPI.getAll();
       
-      set({ 
-        elections: mockElections, 
-        isLoading: false 
-      });
+      if (result.success) {
+        set({ 
+          elections: result.data, 
+          isLoading: false 
+        });
+      } else {
+        set({ 
+          error: result.error, 
+          isLoading: false 
+        });
+      }
     } catch (error) {
       set({ 
-        error: error.message, 
+        error: 'Failed to fetch elections. Please try again.', 
         isLoading: false 
       });
     }
@@ -60,28 +44,40 @@ const useElectionStore = create((set) => ({
   submitVote: async (electionId, candidateId) => {
     set({ isLoading: true, error: null });
     try {
-      // Mock API call - replace with actual API
-      const newVote = {
+      const result = await votingAPI.submitVote({
         electionId,
-        candidateId,
-        timestamp: new Date().toISOString()
-      };
+        candidateId
+      });
       
-      set(state => ({
-        userVotes: {
-          ...state.userVotes,
-          [electionId]: newVote
-        },
-        isLoading: false
-      }));
-      
-      return { success: true };
+      if (result.success) {
+        const newVote = {
+          electionId,
+          candidateId,
+          timestamp: new Date().toISOString()
+        };
+        
+        set(state => ({
+          userVotes: {
+            ...state.userVotes,
+            [electionId]: newVote
+          },
+          isLoading: false
+        }));
+        
+        return { success: true };
+      } else {
+        set({ 
+          error: result.error, 
+          isLoading: false 
+        });
+        return { success: false, error: result.error };
+      }
     } catch (error) {
       set({ 
-        error: error.message, 
+        error: 'Failed to submit vote. Please try again.', 
         isLoading: false 
       });
-      return { success: false, error: error.message };
+      return { success: false, error: 'Failed to submit vote. Please try again.' };
     }
   },
 
@@ -89,28 +85,25 @@ const useElectionStore = create((set) => ({
   fetchResults: async (electionId) => {
     set({ isLoading: true, error: null });
     try {
-      // Mock results - replace with actual API
-      const mockResults = {
-        [electionId]: {
-          totalVotes: 150,
-          candidates: [
-            { id: 1, name: 'John Doe', votes: 60, percentage: 40 },
-            { id: 2, name: 'Jane Smith', votes: 55, percentage: 36.67 },
-            { id: 3, name: 'Mike Brown', votes: 35, percentage: 23.33 }
-          ]
-        }
-      };
+      const result = await resultsAPI.getElectionResults(electionId);
       
-      set(state => ({
-        results: {
-          ...state.results,
-          ...mockResults
-        },
-        isLoading: false
-      }));
+      if (result.success) {
+        set(state => ({
+          results: {
+            ...state.results,
+            [electionId]: result.data
+          },
+          isLoading: false
+        }));
+      } else {
+        set({ 
+          error: result.error, 
+          isLoading: false 
+        });
+      }
     } catch (error) {
       set({ 
-        error: error.message, 
+        error: 'Failed to fetch results. Please try again.', 
         isLoading: false 
       });
     }
@@ -118,14 +111,22 @@ const useElectionStore = create((set) => ({
 
   // Check if user has voted
   hasUserVoted: (electionId) => {
-    const state = useElectionStore.getState();
+    const state = get();
     return !!state.userVotes[electionId];
   },
 
   // Clear error
   clearError: () => {
     set({ error: null });
+  },
+
+  // Initialize store
+  initializeStore: async () => {
+    await fetchElections();
   }
 }));
+
+// Initialize store on creation
+useElectionStore.getState().initializeStore();
 
 export default useElectionStore;
