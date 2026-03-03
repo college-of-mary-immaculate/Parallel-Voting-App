@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { useElectionStore, useAuthStore } from '../store';
+import { LoadingSpinner, ErrorAlert } from '../components';
 
 const Dashboard = () => {
-  const { elections, fetchElections, isLoading } = useElectionStore();
+  const { elections, fetchElections, isLoading, error, clearError } = useElectionStore();
   const { user } = useAuthStore();
 
   useEffect(() => {
@@ -18,11 +19,16 @@ const Dashboard = () => {
         <div className="px-4 py-6 sm:px-0">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <div className="mt-8">
+            <ErrorAlert 
+              error={error} 
+              onClose={clearError}
+            />
             {isLoading ? (
-              <div className="text-center py-8">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                <p className="mt-2 text-gray-500">Loading dashboard...</p>
-              </div>
+              <LoadingSpinner 
+                size="lg" 
+                message="Loading dashboard..." 
+                className="py-8"
+              />
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
