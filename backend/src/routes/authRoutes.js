@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const validator = require('validator');
 const { v4: uuidv4 } = require('uuid');
 const { generateToken, verifyToken, extractTokenFromHeader } = require('../utils/jwtUtils');
+const { hashPassword, verifyPassword, checkPasswordStrength } = require('../utils/passwordUtils');
+const { generateResetToken, verifyResetToken, hashNewPassword } = require('../utils/passwordReset');
 const { query } = require('../config/mockDatabase');
 
 const router = express.Router();
@@ -23,16 +25,17 @@ const validateRegistration = (req, res, next) => {
   // Password validation
   if (!password) {
     errors.push('Password is required');
-  } else if (password.length < 6) {
-    errors.push('Password must be at least 6 characters long');
-  } else if (!validator.isStrongPassword(password, { 
-    minLength: 6, 
-    minLowercase: 1, 
-    minUppercase: 1, 
-    minNumbers: 1, 
-    minSymbols: 0 
-  })) {
-    errors.push('Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number');
+  } else {
+    // Use password strength checker
+    const passwordCheck = checkPasswordStrength(password);
+    if (!passwordCheck.isValid) {
+      errors.push(...passwordCheck.errors);
+    }
+    
+    // Additional length requirement
+    if (password.length < 6) {
+      errors.push('Password must be at least 6 characters long');
+    }
   }
   
   // Name validation
@@ -98,9 +101,8 @@ router.post('/register', validateRegistration, async (req, res) => {
       });
     }
     
-    // Hash password
-    const saltRounds = parseInt(process.env.BCRYPT_ROUNDS) || 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    // Hash password using utility
+    const hashedPassword = await hashPassword(password);
     
     // Generate VIN if not provided
     const finalVin = vin || generateVIN();
@@ -203,8 +205,8 @@ router.post('/login', validateLogin, async (req, res) => {
       });
     }
     
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // Verify password using utility
+    const isPasswordValid = await verifyPassword(password, user.password);
     
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -241,6 +243,168 @@ router.post('/login', validateLogin, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Login failed. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Password reset request
+router.post('/reset-request', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    if (!validator.isEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Valid email is required'
+      });
+    }
+
+    // Check if user exists
+    const users = await query('SELECT email FROM User WHERE email = ?', [email]);
+    if (users.length === 0) {
+      // Don't reveal if email exists or not for security
+      return res.json({
+        success: true,
+        message: 'If an account with that email exists, a password reset link has been sent'
+      });
+    }
+
+    // Generate reset token
+    const resetToken = generateResetToken(email);
+    
+    // In a real app, you would send this via email
+    console.log(`Password reset token for ${email}: ${resetToken}`);
+    
+    res.json({
+      success: true,
+      message: 'Password reset link has been sent to your email',
+      // In development, return token for testing
+      ...(process.env.NODE_ENV === 'development' ? { resetToken } : {})
+    });
+    
+  } catch (error) {
+    console.error('Password reset request error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to process password reset request',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Reset password with token
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    
+    if (!token || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reset token and new password are required'
+      });
+    }
+
+    // Verify reset token
+    const decoded = verifyResetToken(token);
+    
+    // Hash new password
+    const hashedPassword = await hashNewPassword(newPassword);
+    
+    // Update password in database
+    await query(
+      'UPDATE User SET password = ?, updatedAt = NOW() WHERE email = ?',
+      [hashedPassword, decoded.email]
+    );
+    
+    res.json({
+      success: true,
+      message: 'Password has been reset successfully'
+    });
+    
+  } catch (error) {
+    console.error('Password reset error:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Change password (authenticated user)
+router.post('/change-password', authenticateToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.userId;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password and new password are required'
+      });
+    }
+
+    // Get user's current password
+    const users = await query(
+      'SELECT password FROM User WHERE userId = ?',
+      [userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    const user = users[0];
+
+    // Verify current password
+    const isCurrentPasswordValid = await verifyPassword(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Validate new password
+    const passwordCheck = checkPasswordStrength(newPassword);
+    if (!passwordCheck.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password does not meet security requirements',
+        errors: passwordCheck.errors
+      });
+    }
+
+    // Hash new password
+    const hashedNewPassword = await hashPassword(newPassword);
+    
+    // Update password
+    await query(
+      'UPDATE User SET password = ?, updatedAt = NOW() WHERE userId = ?',
+      [hashedNewPassword, userId]
+    );
+    
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+    
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to change password',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
