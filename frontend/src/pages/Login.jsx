@@ -1,29 +1,76 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store';
-import { LoadingButton, ErrorAlert } from '../components';
+import { LoadingButton, ErrorAlert, FormField } from '../components';
+import { validationSchemas, validateForm } from '../utils';
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
   const navigate = useNavigate();
   const { login, isLoading, error, clearError } = useAuthStore();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-    // Clear error when user starts typing
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear errors when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+    
+    // Clear auth store error when user starts typing
     if (error) {
       clearError();
     }
   };
 
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouched(prev => ({
+      ...prev,
+      [name]: true
+    }));
+    
+    // Validate field on blur
+    const fieldErrors = validateForm(formData, {
+      [name]: validationSchemas.login[name]
+    });
+    setErrors(prev => ({
+      ...prev,
+      [name]: fieldErrors[name] || ''
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate all fields
+    const formErrors = validateForm(formData, validationSchemas.login);
+    setErrors(formErrors);
+    
+    // Mark all fields as touched
+    const allTouched = Object.keys(formData).reduce((acc, key) => {
+      acc[key] = true;
+      return acc;
+    }, {});
+    setTouched(allTouched);
+    
+    // If there are errors, don't submit
+    if (Object.keys(formErrors).length > 0) {
+      return;
+    }
+
     const result = await login(formData);
     if (result.success) {
       navigate('/dashboard');
@@ -43,36 +90,34 @@ const Login = () => {
             error={error} 
             onClose={clearError}
           />
-          <div>
-            <label htmlFor="email" className="sr-only">
-              Email address
-            </label>
-            <input
-              id="email"
+          <div className="space-y-6">
+            <FormField
+              label="Email address"
               name="email"
               type="email"
-              autoComplete="email"
-              required
               value={formData.email}
               onChange={handleChange}
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="Email address"
+              onBlur={handleBlur}
+              error={errors.email}
+              touched={touched.email}
+              placeholder="Enter your email"
+              autoComplete="email"
+              required
             />
-          </div>
-          <div>
-            <label htmlFor="password" className="sr-only">
-              Password
-            </label>
-            <input
-              id="password"
+            
+            <FormField
+              label="Password"
               name="password"
               type="password"
-              autoComplete="current-password"
-              required
               value={formData.password}
               onChange={handleChange}
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="Password"
+              onBlur={handleBlur}
+              error={errors.password}
+              touched={touched.password}
+              placeholder="Enter your password"
+              autoComplete="current-password"
+              showPasswordToggle
+              required
             />
           </div>
           <div>
