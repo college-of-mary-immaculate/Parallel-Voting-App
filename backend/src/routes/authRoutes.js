@@ -5,6 +5,8 @@ const { v4: uuidv4 } = require('uuid');
 const { generateToken, verifyToken, extractTokenFromHeader } = require('../utils/jwtUtils');
 const { hashPassword, verifyPassword, checkPasswordStrength } = require('../utils/passwordUtils');
 const { generateResetToken, verifyResetToken, hashNewPassword } = require('../utils/passwordReset');
+const { blacklistToken, blacklistAllUserTokens, getBlacklistStats } = require('../utils/tokenBlacklist');
+const { authenticateToken, authorize, optionalAuth } = require('../middleware/authMiddleware');
 const { query } = require('../config/mockDatabase');
 
 const router = express.Router();
@@ -405,6 +407,125 @@ router.post('/change-password', authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to change password',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Logout (single token)
+router.post('/logout', authenticateToken, async (req, res) => {
+  try {
+    const token = req.token;
+    const userId = req.user.userId;
+    
+    // Blacklist the current token
+    const result = await blacklistToken(token, 'user_logout');
+    
+    res.json({
+      success: true,
+      message: 'Logged out successfully',
+      data: {
+        blacklisted: result.blacklisted,
+        expiresAt: result.expiresAt
+      }
+    });
+    
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Logout failed',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Logout from all devices
+router.post('/logout-all', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const currentToken = req.token;
+    
+    // Blacklist current token
+    await blacklistToken(currentToken, 'user_logout_all');
+    
+    // Blacklist all other tokens for this user
+    const result = await blacklistAllUserTokens(userId, 'user_logout_all');
+    
+    res.json({
+      success: true,
+      message: 'Logged out from all devices successfully',
+      data: {
+        blacklistedCount: result.blacklistedCount,
+        message: result.message
+      }
+    });
+    
+  } catch (error) {
+    console.error('Logout all error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Logout from all devices failed',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Check token status
+router.get('/token-status', optionalAuth, async (req, res) => {
+  try {
+    if (!req.token) {
+      return res.json({
+        success: true,
+        message: 'No token provided',
+        data: {
+          hasToken: false,
+          isValid: false,
+          isBlacklisted: false
+        }
+      });
+    }
+
+    const { isTokenBlacklisted } = require('../utils/tokenBlacklist');
+    const isBlacklisted = isTokenBlacklisted(req.token);
+    
+    res.json({
+      success: true,
+      message: 'Token status retrieved',
+      data: {
+        hasToken: true,
+        isValid: !!req.user,
+        isBlacklisted: isBlacklisted,
+        user: req.user || null
+      }
+    });
+    
+  } catch (error) {
+    console.error('Token status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to check token status',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Admin: Get blacklist statistics
+router.get('/admin/blacklist-stats', authenticateToken, authorize('admin'), async (req, res) => {
+  try {
+    const stats = getBlacklistStats();
+    
+    res.json({
+      success: true,
+      message: 'Blacklist statistics retrieved',
+      data: stats
+    });
+    
+  } catch (error) {
+    console.error('Blacklist stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve blacklist statistics',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }

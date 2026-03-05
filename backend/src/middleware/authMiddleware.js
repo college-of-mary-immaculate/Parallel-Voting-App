@@ -1,4 +1,5 @@
 const { verifyToken, extractTokenFromHeader, generateToken } = require('../utils/jwtUtils');
+const { isTokenBlacklisted } = require('../utils/tokenBlacklist');
 
 /**
  * Authentication Middleware
@@ -16,6 +17,15 @@ const authenticateToken = (req, res, next) => {
         success: false,
         message: 'Access token is required',
         code: 'TOKEN_MISSING'
+      });
+    }
+
+    // Check if token is blacklisted
+    if (isTokenBlacklisted(token)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token has been invalidated (logout)',
+        code: 'TOKEN_BLACKLISTED'
       });
     }
 
@@ -43,6 +53,13 @@ const optionalAuth = (req, res, next) => {
     const token = extractTokenFromHeader(authHeader);
 
     if (token) {
+      // Check if token is blacklisted
+      if (isTokenBlacklisted(token)) {
+        // For optional auth, just continue without user info if token is blacklisted
+        next();
+        return;
+      }
+
       const decoded = verifyToken(token);
       req.user = decoded;
       req.token = token;
