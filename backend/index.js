@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { testConnection, closeConnections } = require('./src/config/database');
+const { startPeriodicCleanup } = require('./src/utils/tokenBlacklist');
 
 // Load environment variables
 dotenv.config();
@@ -55,6 +56,10 @@ const startServer = async () => {
   try {
     // Test database connection
     await testConnection();
+    
+    // Start periodic token blacklist cleanup
+    startPeriodicCleanup();
+    console.log('🧹 Token blacklist cleanup started (runs every hour)');
     
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
