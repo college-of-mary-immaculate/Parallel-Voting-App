@@ -6,6 +6,7 @@ const {
   emitElectionStart,
   emitElectionEnd
 } = require('./socketUtils');
+const { validateVote, validateVoteDeletion } = require('./voteValidation');
 
 /**
  * Vote Utilities
@@ -18,145 +19,105 @@ const castVote = async (voteData) => {
     electionId,
     candidateId,
     userId,
-    voterInfo = null
+    voterInfo,
+    writeInCandidate
   } = voteData;
 
-  // Validate required fields
-  if (!electionId || !candidateId || !userId) {
-    throw new Error('Election ID, candidate ID, and user ID are required');
-  }
-
   try {
-    // Start transaction for vote integrity
-    await query('START TRANSACTION');
-
-    try {
-      // Check if election exists and is active
-      const election = await query(
-        'SELECT electionId, title, status, startTime, endTime, allowWriteIn FROM Election WHERE electionId = ?',
-        [electionId]
-      );
-
-      if (election.length === 0) {
-        throw new Error('Election not found');
-      }
-
-      const electionData = election[0];
-      const now = new Date();
-      const startTime = new Date(electionData.startTime);
-      const endTime = new Date(electionData.endTime);
-
-      // Check if election is active
-      if (electionData.status !== 'active') {
-        throw new Error('Voting is not open for this election');
-      }
-
-      // Check if voting period is valid
-      if (now < startTime) {
-        throw new Error('Voting has not started yet');
-      }
-
-      if (now > endTime) {
-        throw new Error('Voting has ended');
-      }
-
-      // Check if candidate exists and belongs to the election
-      const candidate = await query(
-        'SELECT candidateId, electionId, name, isWriteIn FROM Candidate WHERE candidateId = ?',
-        [candidateId]
-      );
-
-      if (candidate.length === 0) {
-        throw new Error('Candidate not found');
-      }
-
-      const candidateData = candidate[0];
-
-      if (candidateData.electionId != electionId) {
-        throw new Error('Candidate does not belong to this election');
-      }
-
-      // Check if user has already voted in this election
-      const existingVote = await query(
-        'SELECT voteId FROM Vote WHERE electionId = ? AND userId = ?',
-        [electionId, userId]
-      );
-
-      if (existingVote.length > 0) {
-        throw new Error('You have already voted in this election');
-      }
-
-      // Check if user exists and is eligible
-      const user = await query(
-        'SELECT userId, email, isEmailVerified, isBanned FROM User WHERE userId = ?',
-        [userId]
-      );
-
-      if (user.length === 0) {
-        throw new Error('User not found');
-      }
-
-      const userData = user[0];
-
-      // Check if user is banned
-      if (userData.isBanned) {
-        throw new Error('Your account has been banned from voting');
-      }
-
-      // Check if user email is verified (if required)
-      if (!userData.isEmailVerified) {
-        throw new Error('Please verify your email address before voting');
-      }
-
-      // Additional eligibility checks can be added here
-      // For example: age verification, residency, etc.
-
-      // Cast the vote
-      const voteResult = await query(
-        `INSERT INTO Vote (
-          electionId, candidateId, userId, voterInfo, votedAt
-        ) VALUES (?, ?, ?, ?, NOW())`,
-        [electionId, candidateId, userId, voterInfo]
-      );
-
-      // Update candidate vote count (optional, can be calculated)
-      await query(
-        'UPDATE Candidate SET voteCount = voteCount + 1 WHERE candidateId = ?',
-        [candidateId]
-      );
-
-      // Update election vote count (optional, can be calculated)
-      await query(
-        'UPDATE Election SET totalVotes = totalVotes + 1 WHERE electionId = ?',
-        [electionId]
-      );
-
-      await query('COMMIT');
-
-      // Emit real-time vote cast event
-      emitVoteCast(electionId, candidateId, candidateData.name, userData.email);
-
-      // Emit updated results
-      const results = await getElectionResults(electionId);
-      emitResultsUpdate(electionId, results.results);
-
+    // Comprehensive vote validation
+    const validation = await validateVote(userId, electionId, candidateId, writeInCandidate);
+    
+    if (!validation.valid) {
       return {
-        success: true,
-        voteId: voteResult.insertId,
-        message: 'Vote cast successfully',
-        data: {
-          electionTitle: electionData.title,
-          candidateName: candidateData.name,
-          votedAt: new Date().toISOString()
-        }
+        success: false,
+        error: validation.error,
+        message: validation.message,
+        validationResults: validation.validationResults
       };
-
-    } catch (error) {
-      await query('ROLLBACK');
-      throw error;
     }
 
+    await query('START TRANSACTION');
+
+    // Handle write-in candidate if provided
+    let finalCandidateId = candidateId;
+    if (writeInCandidate) {
+      const writeInResult = await query(
+        `INSERT INTO Candidate (
+          electionId, name, description, party, 
+          isWriteIn, status, createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, 'active', NOW(), NOW())`,
+        [
+          electionId,
+          writeInCandidate.name,
+          writeInCandidate.description || null,
+          writeInCandidate.party || 'Independent',
+          1
+        ]
+      );
+      finalCandidateId = writeInResult.insertId;
+    }
+
+    // Cast the vote
+    const voteResult = await query(
+      `INSERT INTO Vote (
+        electionId, candidateId, userId, ipAddress, 
+        userAgent, votedAt
+      ) VALUES (?, ?, ?, ?, ?, NOW())`,
+      [
+        electionId,
+        finalCandidateId,
+        userId,
+        voterInfo?.ipAddress || null,
+        voterInfo?.userAgent || null
+      ]
+    );
+
+    // Update candidate vote count
+    await query(
+      'UPDATE Candidate SET voteCount = voteCount + 1 WHERE candidateId = ?',
+      [finalCandidateId]
+    );
+
+    // Update election vote count (optional, can be calculated)
+    await query(
+      'UPDATE Election SET totalVotes = totalVotes + 1 WHERE electionId = ?',
+      [electionId]
+    );
+
+    await query('COMMIT');
+
+    // Get candidate name for notification
+    const candidateData = await query(
+      'SELECT name FROM Candidate WHERE candidateId = ?',
+      [finalCandidateId]
+    );
+
+    // Get user email for notification
+    const userData = await query(
+      'SELECT email FROM User WHERE userId = ?',
+      [userId]
+    );
+
+    // Emit real-time vote cast event
+    emitVoteCast(electionId, finalCandidateId, candidateData[0]?.name || 'Unknown', userData[0]?.email || 'Anonymous');
+
+    // Emit updated results
+    const results = await getElectionResults(electionId);
+    emitResultsUpdate(electionId, results.results);
+
+    return {
+      success: true,
+      voteId: voteResult.insertId,
+      message: 'Vote cast successfully',
+      data: {
+        electionTitle: validation.election.title,
+        candidateName: candidateData[0]?.name || 'Unknown',
+        votedAt: new Date().toISOString(),
+        validationPassed: true
+      }
+    };
   } catch (error) {
+    await query('ROLLBACK');
     throw new Error(`Failed to cast vote: ${error.message}`);
   }
 };
@@ -510,63 +471,77 @@ const deleteVote = async (voteId, adminUserId) => {
   }
 
   try {
-    // Start transaction
-    await query('START TRANSACTION');
-
-    try {
-      // Get vote details
-      const vote = await query(
-        'SELECT electionId, candidateId, userId FROM Vote WHERE voteId = ?',
-        [voteId]
-      );
-
-      if (vote.length === 0) {
-        throw new Error('Vote not found');
-      }
-
-      const voteData = vote[0];
-
-      // Delete the vote
-      await query('DELETE FROM Vote WHERE voteId = ?', [voteId]);
-
-      // Update candidate vote count
-      await query(
-        'UPDATE Candidate SET voteCount = voteCount - 1 WHERE candidateId = ?',
-        [voteData.candidateId]
-      );
-
-      // Update election vote count
-      await query(
-        'UPDATE Election SET totalVotes = totalVotes - 1 WHERE electionId = ?',
-        [voteData.electionId]
-      );
-
-      await query('COMMIT');
-
-      // Emit vote deletion event
-      emitVoteDeleted(electionId, voteData.candidateId, candidateData.name, adminEmail, 'Admin deletion');
-
-      // Emit updated results
-      const results = await getElectionResults(electionId);
-      emitResultsUpdate(electionId, results.results);
-
+    // Validate vote deletion
+    const validation = await validateVoteDeletion(voteId, adminUserId);
+    
+    if (!validation.valid) {
       return {
-        success: true,
-        message: 'Vote deleted successfully',
-        data: {
-          voteId,
-          electionId: voteData.electionId,
-          candidateId: voteData.candidateId,
-          deletedBy: adminUserId
-        }
+        success: false,
+        error: validation.error,
+        message: validation.message
       };
-
-    } catch (error) {
-      await query('ROLLBACK');
-      throw error;
     }
 
+    await query('START TRANSACTION');
+
+    // Get vote details
+    const vote = await query(
+      'SELECT electionId, candidateId, userId FROM Vote WHERE voteId = ?',
+      [voteId]
+    );
+
+    const voteData = vote[0];
+
+    // Get candidate name for notification
+    const candidateData = await query(
+      'SELECT name FROM Candidate WHERE candidateId = ?',
+      [voteData.candidateId]
+    );
+
+    // Get admin email for notification
+    const adminData = await query(
+      'SELECT email FROM User WHERE userId = ?',
+      [adminUserId]
+    );
+
+    // Delete the vote
+    await query('DELETE FROM Vote WHERE voteId = ?', [voteId]);
+
+    // Update candidate vote count
+    await query(
+      'UPDATE Candidate SET voteCount = voteCount - 1 WHERE candidateId = ?',
+      [voteData.candidateId]
+    );
+
+    // Update election vote count
+    await query(
+      'UPDATE Election SET totalVotes = totalVotes - 1 WHERE electionId = ?',
+      [voteData.electionId]
+    );
+
+    await query('COMMIT');
+
+    // Emit vote deletion event
+    emitVoteDeleted(voteData.electionId, voteData.candidateId, candidateData[0]?.name || 'Unknown', adminData[0]?.email || 'Admin', 'Admin deletion');
+
+    // Emit updated results
+    const results = await getElectionResults(voteData.electionId);
+    emitResultsUpdate(voteData.electionId, results.results);
+
+    return {
+      success: true,
+      message: 'Vote deleted successfully',
+      data: {
+        voteId,
+        electionId: voteData.electionId,
+        candidateId: voteData.candidateId,
+        deletedBy: adminUserId,
+        validationPassed: true
+      }
+    };
+
   } catch (error) {
+    await query('ROLLBACK');
     throw new Error(`Failed to delete vote: ${error.message}`);
   }
 };
