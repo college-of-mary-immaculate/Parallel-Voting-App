@@ -3,7 +3,9 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Elections from './pages/Elections';
 import Vote from './pages/Vote';
+import Results from './pages/Results';
 
 const router = createBrowserRouter([
   {
@@ -35,10 +37,34 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/vote',
+    path: '/elections',
+    element: (
+      <Layout>
+        <Elections />
+      </Layout>
+    ),
+  },
+  {
+    path: '/vote/:id',
     element: (
       <Layout>
         <Vote />
+      </Layout>
+    ),
+  },
+  {
+    path: '/results',
+    element: (
+      <Layout>
+        <Results />
+      </Layout>
+    ),
+  },
+  {
+    path: '/results/:id',
+    element: (
+      <Layout>
+        <Results />
       </Layout>
     ),
   },
