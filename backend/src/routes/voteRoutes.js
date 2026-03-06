@@ -13,6 +13,11 @@ const {
   deleteVote,
   getVotingStats
 } = require('../utils/voteUtils');
+const { 
+  emitRealTimeVoteCount,
+  emitVotingStats,
+  emitResultsUpdate
+} = require('../utils/socketUtils');
 
 const router = express.Router();
 
@@ -381,7 +386,7 @@ router.get('/check/:electionId', authenticateToken, async (req, res) => {
   }
 });
 
-// GET /api/votes/results/:electionId - Get election results
+// GET /api/votes/results/:electionId - Get election results with real-time updates
 router.get('/results/:electionId', async (req, res) => {
   try {
     const electionId = req.params.electionId;
@@ -395,13 +400,17 @@ router.get('/results/:electionId', async (req, res) => {
 
     const result = await getElectionResults(electionId);
 
+    // Emit real-time results update to all connected clients
+    emitResultsUpdate(electionId, result.results);
+
     res.json({
       success: true,
       message: 'Election results retrieved successfully',
       data: {
         election: result.election,
         results: result.results,
-        totalVotes: result.totalVotes
+        totalVotes: result.totalVotes,
+        realTime: true
       }
     });
   } catch (error) {
@@ -415,6 +424,46 @@ router.get('/results/:electionId', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve election results',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// GET /api/votes/realtime/:electionId - Get real-time vote counts
+router.get('/realtime/:electionId', async (req, res) => {
+  try {
+    const electionId = req.params.electionId;
+
+    if (!validator.isInt(electionId.toString(), { min: 1 })) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid election ID'
+      });
+    }
+
+    // Get current vote counts for all candidates
+    const results = await getElectionResults(electionId);
+
+    // Emit real-time vote counts for each candidate
+    results.results.forEach(candidate => {
+      emitRealTimeVoteCount(electionId, candidate.candidateId, candidate.voteCount);
+    });
+
+    res.json({
+      success: true,
+      message: 'Real-time vote counts retrieved successfully',
+      data: {
+        electionId,
+        candidates: results.results,
+        totalVotes: results.totalVotes,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Get real-time vote counts error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve real-time vote counts',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
@@ -434,10 +483,14 @@ router.get('/stats/:electionId', authenticateToken, authorize('admin'), async (r
 
     const result = await getVotingStats(electionId);
 
+    // Emit real-time voting statistics to admins
+    emitVotingStats(electionId, result.stats);
+
     res.json({
       success: true,
       message: 'Voting statistics retrieved successfully',
-      data: result.stats
+      data: result.stats,
+      realTime: true
     });
   } catch (error) {
     console.error('Get voting stats error:', error);
