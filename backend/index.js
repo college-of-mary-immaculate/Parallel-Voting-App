@@ -31,10 +31,12 @@ app.get('/', (req, res) => {
 const authRoutes = require('./src/routes/authRoutes');
 const electionRoutes = require('./src/routes/electionRoutes');
 const candidateRoutes = require('./src/routes/candidateRoutes');
+const voteRoutes = require('./src/routes/voteRoutes');
 const protectedRoutes = require('./src/routes/protectedRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/elections', electionRoutes);
 app.use('/api/candidates', candidateRoutes);
+app.use('/api/votes', voteRoutes);
 app.use('/api', protectedRoutes);
 
 // Error handling middleware
