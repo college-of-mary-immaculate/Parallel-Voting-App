@@ -18,6 +18,7 @@ const {
   emitVotingStats,
   emitResultsUpdate
 } = require('../utils/socketUtils');
+const { getValidationErrorDetails } = require('../utils/voteValidation');
 
 const router = express.Router();
 
@@ -61,57 +62,70 @@ const validateVoteCasting = (req, res, next) => {
   next();
 };
 
-// POST /api/votes - Cast a vote
-router.post('/', authenticateToken, validateVoteCasting, async (req, res) => {
+// POST /api/votes - Cast a vote (with comprehensive validation)
+router.post('/', authenticateToken, async (req, res) => {
   try {
+    const {
+      electionId,
+      candidateId,
+      writeInCandidate,
+      voterInfo
+    } = req.body;
+
+    const userId = req.user.userId;
+
+    // Validate input
+    if (!electionId || (!candidateId && !writeInCandidate)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Election ID and either candidate ID or write-in candidate are required'
+      });
+    }
+
+    // Prepare vote data
     const voteData = {
-      electionId: req.body.electionId,
-      candidateId: req.body.candidateId,
-      userId: req.user.userId,
-      voterInfo: req.body.voterInfo || null
+      electionId: parseInt(electionId),
+      candidateId: candidateId ? parseInt(candidateId) : null,
+      userId,
+      voterInfo: {
+        ...voterInfo,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      },
+      writeInCandidate
     };
 
+    // Cast vote with validation
     const result = await castVote(voteData);
+
+    if (!result.success) {
+      // Get detailed error information
+      const errorDetails = getValidationErrorDetails(result);
+      
+      return res.status(400).json({
+        success: false,
+        error: result.error,
+        message: result.message,
+        details: errorDetails,
+        validationResults: result.validationResults || null,
+        timestamp: new Date().toISOString()
+      });
+    }
 
     res.status(201).json({
       success: true,
       message: result.message,
-      data: {
-        voteId: result.voteId,
-        electionTitle: result.data.electionTitle,
-        candidateName: result.data.candidateName,
-        votedAt: result.data.votedAt
-      }
+      data: result.data,
+      timestamp: new Date().toISOString()
     });
+
   } catch (error) {
     console.error('Cast vote error:', error);
-    
-    // Handle specific error cases
-    if (error.message.includes('already voted')) {
-      return res.status(409).json({
-        success: false,
-        message: error.message,
-        code: 'ALREADY_VOTED'
-      });
-    }
-    
-    if (error.message.includes('not found') || 
-        error.message.includes('not active') ||
-        error.message.includes('has not started') ||
-        error.message.includes('has ended') ||
-        error.message.includes('banned') ||
-        error.message.includes('verify your email')) {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-        code: 'VOTING_NOT_ALLOWED'
-      });
-    }
-
     res.status(500).json({
       success: false,
       message: 'Failed to cast vote',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      timestamp: new Date().toISOString()
     });
   }
 });
