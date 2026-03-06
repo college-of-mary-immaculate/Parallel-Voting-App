@@ -22,9 +22,9 @@ const VoteChart = ({ data, title, type = 'bar' }) => {
 
   if (type === 'pie') {
     return (
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow">
         <h3 className="text-lg font-medium text-gray-900 mb-4">{title}</h3>
-        <div className="relative w-64 h-64 mx-auto">
+        <div className="relative w-48 h-48 sm:w-64 sm:h-64 mx-auto">
           <svg viewBox="0 0 100 100" className="transform -rotate-90">
             {data.map((item, index) => {
               const percentage = getPercentage(item.votes);
@@ -52,21 +52,21 @@ const VoteChart = ({ data, title, type = 'bar' }) => {
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">{totalVotes}</div>
-              <div className="text-sm text-gray-500">Total Votes</div>
+              <div className="text-xl sm:text-2xl font-bold text-gray-900">{totalVotes}</div>
+              <div className="text-xs sm:text-sm text-gray-500">Total Votes</div>
             </div>
           </div>
         </div>
         <div className="mt-4 space-y-2">
           {data.map((item, index) => (
             <div key={item.id} className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className={`w-3 h-3 rounded-full mr-2 ${
+              <div className="flex items-center min-w-0 flex-1">
+                <div className={`w-3 h-3 rounded-full mr-2 flex-shrink-0 ${
                   index === 0 ? 'bg-blue-500' : index === 1 ? 'bg-green-500' : index === 2 ? 'bg-purple-500' : 'bg-yellow-500'
                 }`} />
-                <span className="text-sm text-gray-700">{item.name}</span>
+                <span className="text-sm text-gray-700 truncate">{item.name}</span>
               </div>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm font-medium text-gray-900 ml-2 flex-shrink-0">
                 {item.votes} ({getPercentage(item.votes)}%)
               </span>
             </div>
@@ -77,23 +77,23 @@ const VoteChart = ({ data, title, type = 'bar' }) => {
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
+    <div className="bg-white p-4 sm:p-6 rounded-lg shadow">
       <h3 className="text-lg font-medium text-gray-900 mb-4">{title}</h3>
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {data.map((item, index) => (
           <div key={item.id} className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-700">{item.name}</span>
-              <span className="text-sm text-gray-900 font-semibold">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-1 sm:space-y-0">
+              <span className="text-sm font-medium text-gray-700 truncate sm:pr-2">{item.name}</span>
+              <span className="text-sm text-gray-900 font-semibold flex-shrink-0">
                 {item.votes} ({getPercentage(item.votes)}%)
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-6">
+            <div className="w-full bg-gray-200 rounded-full h-4 sm:h-6">
               <div
-                className={`h-6 rounded-full ${getBarColor(index)} transition-all duration-500 flex items-center justify-end pr-2`}
+                className={`h-4 sm:h-6 rounded-full ${getBarColor(index)} transition-all duration-500 flex items-center justify-end pr-1 sm:pr-2`}
                 style={{ width: `${maxVotes > 0 ? (item.votes / maxVotes) * 100 : 0}%` }}
               >
-                <span className="text-xs text-white font-medium">
+                <span className="text-xs text-white font-medium hidden sm:inline">
                   {getPercentage(item.votes)}%
                 </span>
               </div>
