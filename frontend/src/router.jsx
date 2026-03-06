@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Elections from './pages/Elections';
 import Vote from './pages/Vote';
 import Results from './pages/Results';
+import RealTimeDashboard from './pages/RealTimeDashboard';
 
 const router = createBrowserRouter([
   {
@@ -65,6 +66,14 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <Results />
+      </Layout>
+    ),
+  },
+  {
+    path: '/realtime',
+    element: (
+      <Layout>
+        <RealTimeDashboard />
       </Layout>
     ),
   },
