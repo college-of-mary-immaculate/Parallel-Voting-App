@@ -1,4 +1,11 @@
 const { query } = require('../config/mockDatabase');
+const { 
+  emitElectionStatusChange, 
+  emitElectionCreated, 
+  emitElectionDeleted,
+  emitElectionStart,
+  emitElectionEnd
+} = require('./socketUtils');
 
 /**
  * Election Utilities
@@ -57,6 +64,9 @@ const createElection = async (electionData) => {
         electionData.createdBy || null
       ]
     );
+
+    // Emit election created event
+    emitElectionCreated(result.insertId, title, electionData.createdBy);
 
     return {
       success: true,
@@ -410,6 +420,24 @@ const updateElectionStatus = async (electionId, newStatus, userId) => {
       'UPDATE Election SET status = ?, updatedAt = NOW() WHERE electionId = ?',
       [newStatus, electionId]
     );
+
+    // Get election details for notification
+    const electionDetails = await query(
+      'SELECT title FROM Election WHERE electionId = ?',
+      [electionId]
+    );
+
+    const electionTitle = electionDetails[0]?.title || 'Unknown Election';
+
+    // Emit election status change event
+    emitElectionStatusChange(electionId, electionTitle, election.status, newStatus, userId);
+
+    // Emit special events for important status changes
+    if (newStatus === 'active') {
+      emitElectionStart(electionId, electionTitle);
+    } else if (newStatus === 'completed') {
+      emitElectionEnd(electionId, electionTitle);
+    }
 
     return {
       success: true,
