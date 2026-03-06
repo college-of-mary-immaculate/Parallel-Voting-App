@@ -167,17 +167,17 @@ const Vote = () => {
       <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Header */}
-          <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-8 space-y-4 sm:space-y-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Cast Your Vote</h1>
             <button
               onClick={handleBackToElections}
-              className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4"
+              className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
             >
               <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back to Elections
             </button>
-            <h1 className="text-3xl font-bold text-gray-900">Cast Your Vote</h1>
           </div>
 
           {/* Error Alert */}
@@ -192,7 +192,7 @@ const Vote = () => {
               <p className="mt-1 max-w-2xl text-sm text-gray-500">
                 {election.description}
               </p>
-              <div className="mt-4 flex items-center space-x-6 text-sm text-gray-500">
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-6 text-sm text-gray-500">
                 <div className="flex items-center">
                   <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -223,9 +223,9 @@ const Vote = () => {
             <div className="border-t border-gray-200">
               <div className="p-6">
                 <form onSubmit={(e) => { e.preventDefault(); handleSubmitVote(); }}>
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {election.candidates?.map((candidate, index) => (
-                      <div key={candidate.id} className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div key={candidate.id} className="flex items-center p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                         <input
                           id={`candidate-${candidate.id}`}
                           name="candidate"
@@ -233,25 +233,25 @@ const Vote = () => {
                           value={candidate.id}
                           checked={selectedCandidate === candidate.id}
                           onChange={(e) => handleCandidateSelect(e.target.value)}
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 flex-shrink-0"
                         />
                         <label 
                           htmlFor={`candidate-${candidate.id}`} 
-                          className="ml-3 flex-1 cursor-pointer"
+                          className="ml-3 flex-1 cursor-pointer min-w-0"
                         >
-                          <div className="flex items-center">
-                            <div className={`w-12 h-12 ${getCandidateColor(index)} rounded-full flex items-center justify-center text-white font-semibold mr-4`}>
+                          <div className="flex flex-col sm:flex-row sm:items-center">
+                            <div className={`w-10 h-10 sm:w-12 sm:h-12 ${getCandidateColor(index)} rounded-full flex items-center justify-center text-white font-semibold mr-3 sm:mr-4 flex-shrink-0`}>
                               {getInitials(candidate.name)}
                             </div>
-                            <div className="flex-1">
-                              <div className="text-base font-medium text-gray-900">
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm sm:text-base font-medium text-gray-900 truncate">
                                 {candidate.name}
                               </div>
-                              <div className="text-sm text-gray-500">
+                              <div className="text-xs sm:text-sm text-gray-500">
                                 {candidate.position || candidate.department || 'Candidate'}
                               </div>
                               {candidate.manifesto && (
-                                <div className="mt-2 text-sm text-gray-600">
+                                <div className="mt-2 text-xs sm:text-sm text-gray-600 line-clamp-2">
                                   {candidate.manifesto}
                                 </div>
                               )}
