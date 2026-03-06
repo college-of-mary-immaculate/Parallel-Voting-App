@@ -1,4 +1,11 @@
 const { query } = require('../config/mockDatabase');
+const { 
+  emitVoteCast, 
+  emitResultsUpdate, 
+  emitVoteDeleted,
+  emitElectionStart,
+  emitElectionEnd
+} = require('./socketUtils');
 
 /**
  * Vote Utilities
@@ -125,6 +132,13 @@ const castVote = async (voteData) => {
       );
 
       await query('COMMIT');
+
+      // Emit real-time vote cast event
+      emitVoteCast(electionId, candidateId, candidateData.name, userData.email);
+
+      // Emit updated results
+      const results = await getElectionResults(electionId);
+      emitResultsUpdate(electionId, results.results);
 
       return {
         success: true,
@@ -528,6 +542,13 @@ const deleteVote = async (voteId, adminUserId) => {
       );
 
       await query('COMMIT');
+
+      // Emit vote deletion event
+      emitVoteDeleted(electionId, voteData.candidateId, candidateData.name, adminEmail, 'Admin deletion');
+
+      // Emit updated results
+      const results = await getElectionResults(electionId);
+      emitResultsUpdate(electionId, results.results);
 
       return {
         success: true,
