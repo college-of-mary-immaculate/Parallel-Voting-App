@@ -147,29 +147,29 @@ const Results = () => {
               </svg>
               Back to Elections
             </button>
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Election Results</h1>
-                <p className="mt-1 text-gray-600">{election.title}</p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(election.status)}`}>
-                  {election.status.charAt(0).toUpperCase() + election.status.slice(1)}
-                </span>
-                <LoadingButton
-                  onClick={handleRefresh}
-                  isLoading={isLoading}
-                  loadingText="Refreshing..."
-                  variant="outline"
-                  size="sm"
-                >
-                  <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Refresh
-                </LoadingButton>
-              </div>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-8 space-y-4 sm:space-y-0">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Election Results</h1>
+              <p className="mt-1 text-gray-600">{election.title}</p>
             </div>
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(election.status)}`}>
+                {election.status.charAt(0).toUpperCase() + election.status.slice(1)}
+              </span>
+              <LoadingButton
+                onClick={handleRefresh}
+                isLoading={isLoading}
+                loadingText="Refreshing..."
+                variant="outline"
+                size="sm"
+              >
+                <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh
+              </LoadingButton>
+            </div>
+          </div>
           </div>
 
           {/* Error Alert */}
@@ -227,7 +227,7 @@ const Results = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
             {/* Vote Chart */}
             <div>
               <VoteChart
@@ -238,23 +238,23 @@ const Results = () => {
             </div>
 
             {/* Detailed Results */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white shadow rounded-lg p-4 sm:p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Detailed Results</h3>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {electionResults.candidates?.map((candidate, index) => (
-                  <div key={candidate.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                    <div className="flex items-center">
-                      <div className={`w-10 h-10 ${getCandidateColor(index)} rounded-full flex items-center justify-center text-white font-semibold mr-3`}>
+                  <div key={candidate.id} className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg">
+                    <div className="flex items-center min-w-0 flex-1">
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 ${getCandidateColor(index)} rounded-full flex items-center justify-center text-white font-semibold mr-2 sm:mr-3 flex-shrink-0`}>
                         {getInitials(candidate.name)}
                       </div>
-                      <div>
-                        <div className="font-medium text-gray-900">{candidate.name}</div>
-                        <div className="text-sm text-gray-500">{candidate.position || 'Candidate'}</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm sm:text-base font-medium text-gray-900 truncate">{candidate.name}</div>
+                        <div className="text-xs sm:text-sm text-gray-500">{candidate.position || 'Candidate'}</div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-gray-900">{candidate.votes}</div>
-                      <div className="text-sm text-gray-500">{((candidate.votes / totalVotes) * 100).toFixed(1)}%</div>
+                    <div className="text-right flex-shrink-0 ml-2">
+                      <div className="text-base sm:text-lg font-bold text-gray-900">{candidate.votes}</div>
+                      <div className="text-xs sm:text-sm text-gray-500">{((candidate.votes / totalVotes) * 100).toFixed(1)}%</div>
                     </div>
                   </div>
                 )) || (
@@ -269,12 +269,12 @@ const Results = () => {
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900">{totalVotes}</div>
-                      <div className="text-sm text-gray-500">Total Votes</div>
+                      <div className="text-xl sm:text-2xl font-bold text-gray-900">{totalVotes}</div>
+                      <div className="text-xs sm:text-sm text-gray-500">Total Votes</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900">{electionResults.candidates.length}</div>
-                      <div className="text-sm text-gray-500">Candidates</div>
+                      <div className="text-xl sm:text-2xl font-bold text-gray-900">{electionResults.candidates.length}</div>
+                      <div className="text-xs sm:text-sm text-gray-500">Candidates</div>
                     </div>
                   </div>
                 </div>
@@ -285,7 +285,7 @@ const Results = () => {
           {/* Election Information */}
           <div className="mt-8 bg-white shadow rounded-lg p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Election Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <div>
                 <h4 className="text-sm font-medium text-gray-500 mb-2">Timeline</h4>
                 <div className="space-y-2">
