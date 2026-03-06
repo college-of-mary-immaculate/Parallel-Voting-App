@@ -44,7 +44,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/vote',
+    path: '/vote/:id',
     element: (
       <Layout>
         <Vote />
