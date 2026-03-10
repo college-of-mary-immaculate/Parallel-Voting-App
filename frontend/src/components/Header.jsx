@@ -79,6 +79,17 @@ const Header = () => {
               >
                 Live Dashboard
               </Link>
+              <Link
+                to="/analytics"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  isActive('/analytics')
+                    ? 'border-indigo-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                }`}
+                onClick={handleLinkClick}
+              >
+                Analytics
+              </Link>
             </nav>
           </div>
           
@@ -188,6 +199,17 @@ const Header = () => {
               onClick={handleLinkClick}
             >
               Live Dashboard
+            </Link>
+            <Link
+              to="/analytics"
+              className={`block px-3 py-2 rounded-md text-base font-medium ${
+                isActive('/analytics')
+                  ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+              onClick={handleLinkClick}
+            >
+              Analytics
             </Link>
           </div>
           
