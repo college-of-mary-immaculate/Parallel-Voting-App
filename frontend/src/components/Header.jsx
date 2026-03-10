@@ -90,6 +90,58 @@ const Header = () => {
               >
                 Analytics
               </Link>
+              {isAuthenticated && user?.role === 'admin' && (
+                <div className="relative">
+                  <button
+                    className="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  >
+                    Admin
+                    <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {mobileMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                      <Link
+                        to="/admin"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={handleLinkClick}
+                      >
+                        Admin Dashboard
+                      </Link>
+                      <Link
+                        to="/admin/elections"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={handleLinkClick}
+                      >
+                        Manage Elections
+                      </Link>
+                      <Link
+                        to="/admin/candidates"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={handleLinkClick}
+                      >
+                        Manage Candidates
+                      </Link>
+                      <Link
+                        to="/admin/users"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={handleLinkClick}
+                      >
+                        Manage Users
+                      </Link>
+                      <Link
+                        to="/admin/settings"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={handleLinkClick}
+                      >
+                        Settings
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
             </nav>
           </div>
           
@@ -211,6 +263,70 @@ const Header = () => {
             >
               Analytics
             </Link>
+            {isAuthenticated && user?.role === 'admin' && (
+              <>
+                <div className="border-t border-gray-200 pt-2 mt-2">
+                  <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Admin
+                  </div>
+                </div>
+                <Link
+                  to="/admin"
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                    isActive('/admin')
+                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                  onClick={handleLinkClick}
+                >
+                  Admin Dashboard
+                </Link>
+                <Link
+                  to="/admin/elections"
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                    isActive('/admin/elections')
+                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                  onClick={handleLinkClick}
+                >
+                  Manage Elections
+                </Link>
+                <Link
+                  to="/admin/candidates"
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                    isActive('/admin/candidates')
+                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                  onClick={handleLinkClick}
+                >
+                  Manage Candidates
+                </Link>
+                <Link
+                  to="/admin/users"
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                    isActive('/admin/users')
+                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                  onClick={handleLinkClick}
+                >
+                  Manage Users
+                </Link>
+                <Link
+                  to="/admin/settings"
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                    isActive('/admin/settings')
+                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                  onClick={handleLinkClick}
+                >
+                  Settings
+                </Link>
+              </>
+            )}
           </div>
           
           {/* Mobile User Actions */}
