@@ -7,6 +7,8 @@ import Elections from './pages/Elections';
 import Vote from './pages/Vote';
 import Results from './pages/Results';
 import RealTimeDashboard from './pages/RealTimeDashboard';
+import Analytics from './pages/Analytics';
+import DetailedAnalytics from './pages/DetailedAnalytics';
 
 const router = createBrowserRouter([
   {
@@ -74,6 +76,22 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <RealTimeDashboard />
+      </Layout>
+    ),
+  },
+  {
+    path: '/analytics',
+    element: (
+      <Layout>
+        <Analytics />
+      </Layout>
+    ),
+  },
+  {
+    path: '/detailed-analytics',
+    element: (
+      <Layout>
+        <DetailedAnalytics />
       </Layout>
     ),
   },
