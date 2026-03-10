@@ -9,6 +9,11 @@ import Results from './pages/Results';
 import RealTimeDashboard from './pages/RealTimeDashboard';
 import Analytics from './pages/Analytics';
 import DetailedAnalytics from './pages/DetailedAnalytics';
+import AdminDashboard from './pages/AdminDashboard';
+import ManageElections from './pages/ManageElections';
+import ManageCandidates from './pages/ManageCandidates';
+import ManageUsers from './pages/ManageUsers';
+import AdminSettings from './pages/AdminSettings';
 
 const router = createBrowserRouter([
   {
@@ -92,6 +97,46 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <DetailedAnalytics />
+      </Layout>
+    ),
+  },
+  {
+    path: '/admin',
+    element: (
+      <Layout>
+        <AdminDashboard />
+      </Layout>
+    ),
+  },
+  {
+    path: '/admin/elections',
+    element: (
+      <Layout>
+        <ManageElections />
+      </Layout>
+    ),
+  },
+  {
+    path: '/admin/candidates',
+    element: (
+      <Layout>
+        <ManageCandidates />
+      </Layout>
+    ),
+  },
+  {
+    path: '/admin/users',
+    element: (
+      <Layout>
+        <ManageUsers />
+      </Layout>
+    ),
+  },
+  {
+    path: '/admin/settings',
+    element: (
+      <Layout>
+        <AdminSettings />
       </Layout>
     ),
   },
