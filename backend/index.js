@@ -38,21 +38,25 @@ const authRoutes = require('./src/routes/authRoutes');
 const electionRoutes = require('./src/routes/electionRoutes');
 const candidateRoutes = require('./src/routes/candidateRoutes');
 const voteRoutes = require('./src/routes/voteRoutes');
+const secureVoteRoutes = require('./src/routes/secureVoteRoutes');
 const socketRoutes = require('./src/routes/socketRoutes');
 const realtimeRoutes = require('./src/routes/realtimeRoutes');
 const analyticsRoutes = require('./src/routes/analyticsRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const notificationRoutes = require('./src/routes/notificationRoutes');
+const securityRoutes = require('./src/routes/securityRoutes');
 const protectedRoutes = require('./src/routes/protectedRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/elections', electionRoutes);
 app.use('/api/candidates', candidateRoutes);
 app.use('/api/votes', voteRoutes);
+app.use('/api/secure-votes', secureVoteRoutes);
 app.use('/api/socket', socketRoutes);
 app.use('/api/realtime', realtimeRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/security', securityRoutes);
 app.use('/api', protectedRoutes);
 
 // Error handling middleware
