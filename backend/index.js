@@ -41,6 +41,7 @@ const voteRoutes = require('./src/routes/voteRoutes');
 const socketRoutes = require('./src/routes/socketRoutes');
 const realtimeRoutes = require('./src/routes/realtimeRoutes');
 const analyticsRoutes = require('./src/routes/analyticsRoutes');
+const adminRoutes = require('./src/routes/adminRoutes');
 const protectedRoutes = require('./src/routes/protectedRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/elections', electionRoutes);
@@ -49,6 +50,7 @@ app.use('/api/votes', voteRoutes);
 app.use('/api/socket', socketRoutes);
 app.use('/api/realtime', realtimeRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api', protectedRoutes);
 
 // Error handling middleware
