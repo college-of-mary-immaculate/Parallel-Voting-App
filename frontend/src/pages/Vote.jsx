@@ -18,7 +18,6 @@ const Vote = () => {
   
   const [selectedCandidate, setSelectedCandidate] = useState('');
   const [hasVoted, setHasVoted] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
     fetchElections();
@@ -56,8 +55,9 @@ const Vote = () => {
       userVotes[election.id] = true;
       localStorage.setItem('userVotes', JSON.stringify(userVotes));
       
-      setHasVoted(true);
-      setShowConfirmation(true);
+      // Generate transaction ID and redirect to confirmation page
+      const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      navigate(`/vote-confirmation?transactionId=${transactionId}&electionId=${election.id}&candidateId=${selectedCandidate}`);
     }
   };
 
@@ -122,7 +122,7 @@ const Vote = () => {
     );
   }
 
-  if (hasVoted || showConfirmation) {
+  if (hasVoted) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -135,10 +135,10 @@ const Vote = () => {
                   </svg>
                 </div>
                 <h3 className="text-lg leading-6 font-medium text-gray-900 mb-2">
-                  Vote Submitted Successfully!
+                  You have already voted in this election
                 </h3>
                 <p className="text-sm text-gray-500 mb-6">
-                  Your vote has been recorded for the {election.title}. Thank you for participating!
+                  You can view the results or return to the elections list.
                 </p>
                 <div className="space-y-3">
                   <button

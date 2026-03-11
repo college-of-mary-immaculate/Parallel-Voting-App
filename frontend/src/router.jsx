@@ -14,6 +14,7 @@ import ManageElections from './pages/ManageElections';
 import ManageCandidates from './pages/ManageCandidates';
 import ManageUsers from './pages/ManageUsers';
 import AdminSettings from './pages/AdminSettings';
+import VoteConfirmation from './pages/VoteConfirmation';
 
 const router = createBrowserRouter([
   {
@@ -57,6 +58,14 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <Vote />
+      </Layout>
+    ),
+  },
+  {
+    path: '/vote-confirmation',
+    element: (
+      <Layout>
+        <VoteConfirmation />
       </Layout>
     ),
   },
