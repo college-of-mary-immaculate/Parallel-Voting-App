@@ -111,6 +111,14 @@ const useAuthStore = create((set, get) => ({
     set({ error: null });
   },
 
+  // Update user profile
+  updateUser: (userData) => {
+    const currentUser = get().user;
+    set({ 
+      user: { ...currentUser, ...userData }
+    });
+  },
+
   // Get current token
   getToken: () => {
     return get().token || localStorage.getItem('token');

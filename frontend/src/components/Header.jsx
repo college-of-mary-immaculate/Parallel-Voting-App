@@ -155,16 +155,36 @@ const Header = () => {
                       {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                     </span>
                   </div>
-                  <span className="text-gray-700 text-sm font-medium hidden lg:block">
-                    {user?.name}
-                  </span>
+                  <span className="text-sm font-medium text-gray-700">{user?.name || 'User'}</span>
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Logout
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    className="flex items-center text-sm text-gray-500 hover:text-gray-700 focus:outline-none"
+                  >
+                    <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                    Account
+                  </button>
+                  {mobileMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                      <Link
+                        to="/profile"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={handleLinkClick}
+                      >
+                        Profile
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="flex items-center space-x-4">
@@ -344,6 +364,13 @@ const Header = () => {
                     <div className="text-sm text-gray-500">{user?.email}</div>
                   </div>
                 </div>
+                <Link
+                  to="/profile"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  onClick={handleLinkClick}
+                >
+                  Profile
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50"

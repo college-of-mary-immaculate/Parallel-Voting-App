@@ -15,6 +15,7 @@ import ManageCandidates from './pages/ManageCandidates';
 import ManageUsers from './pages/ManageUsers';
 import AdminSettings from './pages/AdminSettings';
 import VoteConfirmation from './pages/VoteConfirmation';
+import UserProfile from './pages/UserProfile';
 
 const router = createBrowserRouter([
   {
@@ -66,6 +67,14 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <VoteConfirmation />
+      </Layout>
+    ),
+  },
+  {
+    path: '/profile',
+    element: (
+      <Layout>
+        <UserProfile />
       </Layout>
     ),
   },
