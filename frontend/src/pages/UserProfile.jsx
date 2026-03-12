@@ -1,7 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store';
-import { LoadingSpinner, ErrorAlert, LoadingButton } from '../components';
+import { 
+  LoadingSpinner, 
+  ErrorAlert, 
+  LoadingButton,
+  ProfileCardSkeleton,
+  VotingHistorySkeleton,
+  SettingsFormSkeleton,
+  InlineLoader
+} from '../components';
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -9,6 +17,8 @@ const UserProfile = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -59,13 +69,15 @@ const UserProfile = () => {
       yearLevel: user.yearLevel || '',
       bio: user.bio || ''
     });
+    
+    setIsProfileLoading(false);
 
     // Load voting history
     loadVotingHistory();
   }, [user, navigate]);
 
   const loadVotingHistory = async () => {
-    setIsLoading(true);
+    setIsHistoryLoading(true);
     try {
       // Mock API call
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -110,7 +122,7 @@ const UserProfile = () => {
     } catch (err) {
       setError('Failed to load voting history');
     } finally {
-      setIsLoading(false);
+      setIsHistoryLoading(false);
     }
   };
 
@@ -225,9 +237,12 @@ const UserProfile = () => {
 
   const renderProfileTab = () => (
     <div className="space-y-6">
-      <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-6">Personal Information</h3>
-        <form onSubmit={handleProfileUpdate}>
+      {isProfileLoading ? (
+        <ProfileCardSkeleton />
+      ) : (
+        <div className="bg-white shadow rounded-lg p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-6">Personal Information</h3>
+          <form onSubmit={handleProfileUpdate}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -335,6 +350,7 @@ const UserProfile = () => {
           </div>
         </form>
       </div>
+      )}
     </div>
   );
 
@@ -346,10 +362,8 @@ const UserProfile = () => {
           <p className="text-sm text-gray-500">Your complete voting record</p>
         </div>
         <div className="overflow-x-auto">
-          {isLoading ? (
-            <div className="p-8 text-center">
-              <LoadingSpinner size="md" message="Loading voting history..." />
-            </div>
+          {isHistoryLoading ? (
+            <VotingHistorySkeleton />
           ) : votingHistory.length > 0 ? (
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -447,9 +461,12 @@ const UserProfile = () => {
 
   const renderSettingsTab = () => (
     <div className="space-y-6">
-      <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-6">Notification Preferences</h3>
-        <form onSubmit={handleSettingsUpdate}>
+      {isProfileLoading ? (
+        <SettingsFormSkeleton />
+      ) : (
+        <div className="bg-white shadow rounded-lg p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-6">Notification Preferences</h3>
+          <form onSubmit={handleSettingsUpdate}>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -558,6 +575,7 @@ const UserProfile = () => {
           </div>
         </form>
       </div>
+      )}
     </div>
   );
 
