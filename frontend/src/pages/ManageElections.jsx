@@ -1,66 +1,78 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useElectionStore } from '../store';
-import { LoadingSpinner, ErrorAlert, LoadingButton } from '../components';
+import { LoadingSpinner, ErrorAlert, LoadingButton, EnhancedFormField, ValidationSummary } from '../components';
+import { useFormValidation } from '../hooks';
+import { validationSchemas } from '../utils';
 
 const ManageElections = () => {
   const navigate = useNavigate();
   const { elections, fetchElections, isLoading, error, clearError } = useElectionStore();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingElection, setEditingElection] = useState(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    startDate: '',
-    endDate: '',
-    status: 'draft',
-    type: 'general'
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const {
+    formData,
+    errors,
+    touched,
+    isSubmitting,
+    hasTouchedErrors,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+    getFieldProps,
+    resetForm,
+    setFieldValue
+  } = useFormValidation(
+    {
+      title: '',
+      description: '',
+      startDate: '',
+      endDate: '',
+      status: 'draft',
+      type: 'general',
+      category: '',
+      maxCandidates: ''
+    },
+    validationSchemas.electionCreation,
+    {
+      validateOnChange: true,
+      validateOnBlur: true,
+      debounceMs: 300
+    }
+  );
 
   useEffect(() => {
     fetchElections();
   }, [fetchElections]);
 
-  const handleCreateElection = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
+  const handleCreateElection = async (formData) => {
     try {
       // Mock API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       setShowCreateForm(false);
-      setFormData({
-        title: '',
-        description: '',
-        startDate: '',
-        endDate: '',
-        status: 'draft',
-        type: 'general'
-      });
+      resetForm();
       fetchElections();
     } catch (err) {
       console.error('Failed to create election:', err);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   const handleEditElection = (election) => {
     setEditingElection(election);
-    setFormData({
-      title: election.title,
-      description: election.description,
-      startDate: election.startDate,
-      endDate: election.endDate,
-      status: election.status,
-      type: election.type || 'general'
-    });
+    setFieldValue('title', election.title);
+    setFieldValue('description', election.description);
+    setFieldValue('startDate', election.startDate);
+    setFieldValue('endDate', election.endDate);
+    setFieldValue('status', election.status);
+    setFieldValue('type', election.type || 'general');
+    setFieldValue('category', election.category || '');
+    setFieldValue('maxCandidates', election.maxCandidates || '');
     setShowCreateForm(true);
   };
 
   const handleDeleteElection = async (electionId) => {
-    if (!confirm('Are you sure you want to delete this election?')) return;
+    if (!confirm('Are you sure you want to delete this election? This action cannot be undone.')) return;
     
     try {
       // Mock API call
@@ -79,6 +91,18 @@ const ManageElections = () => {
     } catch (err) {
       console.error('Failed to update election status:', err);
     }
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    clearError(); // Clear any previous errors
+    handleSubmit(handleCreateElection);
+  };
+
+  const handleCancelForm = () => {
+    setShowCreateForm(false);
+    setEditingElection(null);
+    resetForm();
   };
 
   const getStatusColor = (status) => {
@@ -150,97 +174,128 @@ const ManageElections = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 {editingElection ? 'Edit Election' : 'Create New Election'}
               </h3>
-              <form onSubmit={handleCreateElection}>
+              
+              {/* Validation Summary */}
+              {hasTouchedErrors && (
+                <ValidationSummary
+                  errors={errors}
+                  touched={touched}
+                  title="Please fix the following errors:"
+                  onFieldClick={(fieldName) => {
+                    const element = document.getElementById(fieldName);
+                    if (element) {
+                      element.focus();
+                      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                  }}
+                />
+              )}
+
+              <form onSubmit={handleFormSubmit}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-                      Election Title
-                    </label>
-                    <input
-                      type="text"
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
-                      Election Type
-                    </label>
-                    <select
-                      id="type"
-                      value={formData.type}
-                      onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    >
-                      <option value="general">General Election</option>
-                      <option value="primary">Primary Election</option>
-                      <option value="referendum">Referendum</option>
-                      <option value="local">Local Election</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
-                      Start Date
-                    </label>
-                    <input
-                      type="datetime-local"
-                      id="startDate"
-                      value={formData.startDate}
-                      onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2">
-                      End Date
-                    </label>
-                    <input
-                      type="datetime-local"
-                      id="endDate"
-                      value={formData.endDate}
-                      onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="mt-6">
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  <EnhancedFormField
+                    label="Election Title"
+                    name="title"
+                    type="text"
+                    placeholder="Enter election title"
                     required
+                    showSuccessIndicator={true}
+                    helperText="Choose a clear and descriptive title for the election."
+                    {...getFieldProps('title')}
+                  />
+
+                  <EnhancedFormField
+                    label="Election Type"
+                    name="type"
+                    type="select"
+                    helperText="Select the type of election you're creating."
+                    {...getFieldProps('type')}
+                  >
+                    <option value="general">General Election</option>
+                    <option value="primary">Primary Election</option>
+                    <option value="referendum">Referendum</option>
+                    <option value="local">Local Election</option>
+                  </EnhancedFormField>
+
+                  <EnhancedFormField
+                    label="Start Date"
+                    name="startDate"
+                    type="datetime-local"
+                    required
+                    showSuccessIndicator={true}
+                    helperText="When the election period begins."
+                    {...getFieldProps('startDate')}
+                  />
+
+                  <EnhancedFormField
+                    label="End Date"
+                    name="endDate"
+                    type="datetime-local"
+                    required
+                    showSuccessIndicator={true}
+                    helperText="When voting ends and results can be announced."
+                    {...getFieldProps('endDate')}
+                  />
+
+                  <EnhancedFormField
+                    label="Category"
+                    name="category"
+                    type="select"
+                    helperText="Select the appropriate category for this election."
+                    {...getFieldProps('category')}
+                  >
+                    <option value="">Select a category</option>
+                    <option value="student-government">Student Government</option>
+                    <option value="club-elections">Club Elections</option>
+                    <option value="referendum">Referendum</option>
+                    <option value="policy">Policy</option>
+                    <option value="other">Other</option>
+                  </EnhancedFormField>
+
+                  <EnhancedFormField
+                    label="Maximum Candidates"
+                    name="maxCandidates"
+                    type="number"
+                    placeholder="e.g., 10"
+                    required
+                    showSuccessIndicator={true}
+                    helperText="Maximum number of candidates allowed (2-50)."
+                    {...getFieldProps('maxCandidates')}
                   />
                 </div>
+
                 <div className="mt-6">
-                  <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
-                    Status
-                  </label>
-                  <select
-                    id="status"
-                    value={formData.status}
-                    onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  <EnhancedFormField
+                    label="Description"
+                    name="description"
+                    type="textarea"
+                    rows={4}
+                    required
+                    showSuccessIndicator={true}
+                    helperText="Provide a detailed description of the election purpose and what voters should know."
+                    {...getFieldProps('description')}
+                  />
+                </div>
+
+                <div className="mt-6">
+                  <EnhancedFormField
+                    label="Status"
+                    name="status"
+                    type="select"
+                    helperText="Set the initial status of the election."
+                    {...getFieldProps('status')}
                   >
                     <option value="draft">Draft</option>
                     <option value="upcoming">Upcoming</option>
                     <option value="active">Active</option>
                     <option value="completed">Completed</option>
-                  </select>
+                  </EnhancedFormField>
                 </div>
-                <div className="mt-6 flex justify-end space-x-3">
+
+                <div className="mt-8 flex justify-end space-x-3">
                   <button
                     type="button"
-                    onClick={() => setShowCreateForm(false)}
+                    onClick={handleCancelForm}
                     className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     Cancel
@@ -248,7 +303,8 @@ const ManageElections = () => {
                   <LoadingButton
                     type="submit"
                     isLoading={isSubmitting}
-                    loadingText="Saving..."
+                    loadingText={editingElection ? 'Updating...' : 'Creating...'}
+                    disabled={hasTouchedErrors}
                   >
                     {editingElection ? 'Update Election' : 'Create Election'}
                   </LoadingButton>

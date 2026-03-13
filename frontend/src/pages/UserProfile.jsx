@@ -8,8 +8,12 @@ import {
   ProfileCardSkeleton,
   VotingHistorySkeleton,
   SettingsFormSkeleton,
-  InlineLoader
+  InlineLoader,
+  EnhancedFormField,
+  ValidationSummary
 } from '../components';
+import { useFormValidation, useAsyncValidation } from '../hooks';
+import { validationSchemas, checkPasswordStrength } from '../utils';
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -22,16 +26,79 @@ const UserProfile = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  // Profile form data
-  const [profileData, setProfileData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    department: '',
-    studentId: '',
-    yearLevel: '',
-    bio: ''
-  });
+  // Profile form validation
+  const {
+    formData: profileData,
+    errors: profileErrors,
+    touched: profileTouched,
+    isSubmitting: isProfileSubmitting,
+    hasTouchedErrors: hasProfileErrors,
+    handleChange: handleProfileChange,
+    handleBlur: handleProfileBlur,
+    handleSubmit: handleProfileSubmit,
+    getFieldProps: getProfileFieldProps,
+    setFieldValue: setProfileFieldValue,
+    resetForm: resetProfileForm
+  } = useFormValidation(
+    {
+      name: '',
+      email: '',
+      phone: '',
+      department: '',
+      studentId: '',
+      yearLevel: '',
+      bio: ''
+    },
+    validationSchemas.profileUpdate,
+    {
+      validateOnChange: true,
+      validateOnBlur: true,
+      debounceMs: 300
+    }
+  );
+
+  // Password form validation
+  const {
+    formData: passwordData,
+    errors: passwordErrors,
+    touched: passwordTouched,
+    isSubmitting: isPasswordSubmitting,
+    hasTouchedErrors: hasPasswordErrors,
+    handleChange: handlePasswordChange,
+    handleBlur: handlePasswordBlur,
+    handleSubmit: handlePasswordSubmit,
+    getFieldProps: getPasswordFieldProps,
+    setFieldValue: setPasswordFieldValue,
+    resetForm: resetPasswordForm
+  } = useFormValidation(
+    {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    },
+    {
+      currentPassword: validationSchemas.profileUpdate.password,
+      newPassword: validationSchemas.register.password,
+      confirmPassword: validationSchemas.register.confirmPassword
+    },
+    {
+      validateOnChange: true,
+      validateOnBlur: true,
+      debounceMs: 300,
+      customValidations: {
+        confirmPassword: {
+          custom: {
+            validate: (value, formData) => {
+              if (value !== formData.newPassword) {
+                return 'Passwords do not match';
+              }
+              return null;
+            }
+          }
+        }
+      }
+    }
+  );
 
   // Settings form data
   const [settingsData, setSettingsData] = useState({
@@ -43,15 +110,10 @@ const UserProfile = () => {
     showVotingHistory: true
   });
 
-  // Password form data
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-
   // Mock voting history
   const [votingHistory, setVotingHistory] = useState([]);
+
+  const { validateAsync, isAsyncValidating } = useAsyncValidation();
 
   useEffect(() => {
     if (!user) {
@@ -60,21 +122,19 @@ const UserProfile = () => {
     }
 
     // Set initial form data
-    setProfileData({
-      name: user.name || '',
-      email: user.email || '',
-      phone: user.phone || '',
-      department: user.department || '',
-      studentId: user.studentId || '',
-      yearLevel: user.yearLevel || '',
-      bio: user.bio || ''
-    });
+    setProfileFieldValue('name', user.name || '');
+    setProfileFieldValue('email', user.email || '');
+    setProfileFieldValue('phone', user.phone || '');
+    setProfileFieldValue('department', user.department || '');
+    setProfileFieldValue('studentId', user.studentId || '');
+    setProfileFieldValue('yearLevel', user.yearLevel || '');
+    setProfileFieldValue('bio', user.bio || '');
     
     setIsProfileLoading(false);
 
     // Load voting history
     loadVotingHistory();
-  }, [user, navigate]);
+  }, [user, navigate, setProfileFieldValue]);
 
   const loadVotingHistory = async () => {
     setIsHistoryLoading(true);
@@ -100,24 +160,13 @@ const UserProfile = () => {
           electionType: 'Local Election',
           candidateName: 'Bob Smith',
           candidatePosition: 'Class Representative',
-          voteDate: '2023-11-15T10:15:00Z',
-          transactionId: 'TXN-1700036100000-E5F6G7H8',
-          status: 'confirmed',
-          isCurrent: false
-        },
-        {
-          id: 3,
-          electionTitle: 'Club President Election 2023',
-          electionType: 'Club Election',
-          candidateName: 'Carol Davis',
-          candidatePosition: 'Club President',
-          voteDate: '2023-09-20T16:45:00Z',
-          transactionId: 'TXN-1695236700000-I9J0K1L2',
+          voteDate: '2023-11-15T10:20:00Z',
+          transactionId: 'TXN-1700016000000-E5F6G7H8',
           status: 'confirmed',
           isCurrent: false
         }
       ];
-
+      
       setVotingHistory(mockHistory);
     } catch (err) {
       setError('Failed to load voting history');
@@ -126,18 +175,18 @@ const UserProfile = () => {
     }
   };
 
-  const handleProfileUpdate = async (e) => {
-    e.preventDefault();
+  const handleProfileUpdate = async (formData) => {
     setIsSubmitting(true);
     setError(null);
     setSuccess(null);
-
+    
     try {
       // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Update user in store
-      updateUser(profileData);
+      await updateUser(formData);
+      
       setSuccess('Profile updated successfully!');
     } catch (err) {
       setError('Failed to update profile');
@@ -146,56 +195,81 @@ const UserProfile = () => {
     }
   };
 
-  const handleSettingsUpdate = async (e) => {
-    e.preventDefault();
+  const handlePasswordUpdate = async (formData) => {
     setIsSubmitting(true);
     setError(null);
     setSuccess(null);
-
+    
     try {
       // Mock API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      setSuccess('Settings updated successfully!');
+      
+      setSuccess('Password changed successfully!');
+      resetPasswordForm();
     } catch (err) {
-      setError('Failed to update settings');
+      setError('Failed to change password');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handlePasswordUpdate = async (e) => {
-    e.preventDefault();
+  const handleEmailBlur = async (e) => {
+    handleProfileBlur(e);
     
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError('New passwords do not match');
-      return;
+    // Optional: Add async email validation
+    const { name, value } = e.target;
+    if (name === 'email' && value && !profileErrors.email) {
+      await validateAsync(name, async (email) => {
+        // Example: Check if email format is valid for domain
+        const domain = email.split('@')[1];
+        if (domain && ['test.com', 'example.com'].includes(domain.toLowerCase())) {
+          return { isValid: false, error: 'Please use a real email address' };
+        }
+        return { isValid: true };
+      }, value);
     }
+  };
 
-    if (passwordData.newPassword.length < 8) {
-      setError('Password must be at least 8 characters long');
-      return;
+  // Clear confirmPassword error when newPassword changes
+  const handlePasswordInputChange = (e) => {
+    handlePasswordChange(e);
+    
+    // Clear confirmPassword error when newPassword changes
+    if (passwordData.confirmPassword && passwordData.confirmPassword !== e.target.value) {
+      setPasswordFieldValue('confirmPassword', '');
     }
+  };
 
-    setIsSubmitting(true);
+  // Get password strength for real-time feedback
+  const passwordStrength = checkPasswordStrength(passwordData.newPassword);
+
+  const handleProfileFormSubmit = (e) => {
+    e.preventDefault();
     setError(null);
-    setSuccess(null);
+    handleProfileSubmit(handleProfileUpdate);
+  };
 
-    try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-      
-      setSuccess('Password updated successfully!');
-    } catch (err) {
-      setError('Failed to update password');
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handlePasswordFormSubmit = (e) => {
+    e.preventDefault();
+    setError(null);
+    handlePasswordSubmit(handlePasswordUpdate);
+  };
+
+  const handleSettingsChange = (key, value) => {
+    setSettingsData(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const handleDeleteAccount = async () => {
@@ -216,16 +290,6 @@ const UserProfile = () => {
     } catch (err) {
       setError('Failed to delete account');
     }
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   const tabs = [
