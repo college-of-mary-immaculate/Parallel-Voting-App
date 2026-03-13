@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store';
+import { useAccessibility } from './AccessibilityProvider';
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuthStore();
+  const { keyboardUser, announceToScreenReader } = useAccessibility();
   
   const isActive = (path) => {
     return location.pathname === path;
@@ -14,10 +16,16 @@ const Header = () => {
   const handleLogout = () => {
     logout();
     setMobileMenuOpen(false);
+    announceToScreenReader('You have been logged out successfully');
   };
 
   const handleLinkClick = () => {
     setMobileMenuOpen(false);
+  };
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+    announceToScreenReader(`Mobile menu ${!mobileMenuOpen ? 'opened' : 'closed'}`);
   };
 
   return (
@@ -26,7 +34,12 @@ const Header = () => {
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <Link to="/dashboard" className="flex items-center" onClick={handleLinkClick}>
+              <Link 
+                to="/dashboard" 
+                className="flex items-center" 
+                onClick={handleLinkClick}
+                aria-label="VoteApp - Go to dashboard"
+              >
                 <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-white font-bold text-lg">V</span>
                 </div>
@@ -34,7 +47,12 @@ const Header = () => {
               </Link>
             </div>
             {/* Desktop Navigation */}
-            <nav className="hidden md:ml-6 md:flex md:space-x-8">
+            <nav 
+              id="navigation"
+              className="hidden md:ml-6 md:flex md:space-x-8"
+              role="navigation"
+              aria-label="Main navigation"
+            >
               <Link
                 to="/dashboard"
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
@@ -43,6 +61,7 @@ const Header = () => {
                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 }`}
                 onClick={handleLinkClick}
+                aria-current={isActive('/dashboard') ? 'page' : undefined}
               >
                 Dashboard
               </Link>
