@@ -31,7 +31,12 @@ const ValidationSummary = ({
   };
 
   return (
-    <div className={`bg-red-50 border border-red-200 rounded-md p-4 ${className}`}>
+    <div 
+      className={`bg-red-50 border border-red-200 rounded-md p-4 ${className} mb-4`}
+      role="alert"
+      aria-labelledby="validation-summary-title"
+      aria-live="assertive"
+    >
       <div className="flex items-start">
         {showIcon && (
           <div className="flex-shrink-0">
@@ -41,23 +46,33 @@ const ValidationSummary = ({
           </div>
         )}
         <div className="ml-3 flex-1">
-          <h3 className="text-sm font-medium text-red-800">
+          <h3 
+            id="validation-summary-title"
+            className="text-lg font-medium text-red-800 mb-3"
+          >
             {title}
           </h3>
           <div className="mt-2 text-sm text-red-700">
-            <ul className="list-disc list-inside space-y-1">
+            <ul className="list-disc list-inside space-y-2">
               {activeErrors.map(fieldName => (
                 <li key={fieldName}>
                   <button
                     type="button"
                     onClick={() => handleErrorClick(fieldName)}
-                    className="underline hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded"
+                    className="underline hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded px-1 py-0.5"
+                    aria-label={`Go to ${fieldName} field: ${errors[fieldName]}`}
                   >
                     {errors[fieldName]}
                   </button>
                 </li>
               ))}
             </ul>
+          </div>
+          <div className="mt-3 text-sm text-red-600">
+            {activeErrors.length === 1 
+              ? 'There is 1 error that needs to be fixed.'
+              : `There are ${activeErrors.length} errors that need to be fixed.`
+            }
           </div>
         </div>
       </div>
