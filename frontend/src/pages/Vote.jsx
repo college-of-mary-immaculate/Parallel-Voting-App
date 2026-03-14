@@ -1,7 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useElectionStore, useAuthStore } from '../store';
-import { LoadingSpinner, ErrorAlert, LoadingButton } from '../components';
+import { 
+  LoadingSpinner, 
+  ErrorAlert, 
+  LoadingButton, 
+  EnhancedFormField, 
+  ValidationSummary,
+  FocusTrap
+} from '../components';
+import { useFormValidation } from '../hooks';
+import { useAccessibility } from '../components/AccessibilityProvider';
+import { validationSchemas } from '../utils';
 
 const Vote = () => {
   const { id } = useParams();
@@ -14,11 +24,34 @@ const Vote = () => {
     error, 
     clearError 
   } = useElectionStore();
-  const { user } = useAuthStore();
+  const { user, announceToScreenReader } = useAccessibility();
   
-  const [selectedCandidate, setSelectedCandidate] = useState('');
+  const {
+    formData,
+    errors,
+    touched,
+    isSubmitting,
+    hasTouchedErrors,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+    getFieldProps,
+    resetForm
+  } = useFormValidation(
+    {
+      candidateId: '',
+      confirmation: false
+    },
+    validationSchemas.voteSelection,
+    {
+      validateOnChange: true,
+      validateOnBlur: true,
+      debounceMs: 300
+    }
+  );
+
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
     fetchElections();
@@ -37,36 +70,56 @@ const Vote = () => {
   }, [election, user]);
 
   const handleCandidateSelect = (candidateId) => {
-    setSelectedCandidate(candidateId);
+    handleChange({ target: { name: 'candidateId', value: candidateId } });
+    announceToScreenReader(`Selected candidate ${candidateId}`);
   };
 
-  const handleSubmitVote = async () => {
-    if (!selectedCandidate) {
+  const handleConfirmationChange = (e) => {
+    handleChange({ target: { name: 'confirmation', value: e.target.checked } });
+  };
+
+  const handleVoteSubmit = async (formData) => {
+    if (!showConfirmationModal) {
+      setShowConfirmationModal(true);
       return;
     }
 
-    const result = await submitVote({
-      electionId: election.id,
-      candidateId: selectedCandidate
-    });
+    try {
+      const result = await submitVote({
+        electionId: election.id,
+        candidateId: formData.candidateId
+      });
 
-    if (result.success) {
-      // Mark as voted in localStorage (temporary solution)
-      const userVotes = JSON.parse(localStorage.getItem('userVotes') || '{}');
-      userVotes[election.id] = true;
-      localStorage.setItem('userVotes', JSON.stringify(userVotes));
-      
-      setHasVoted(true);
-      setShowConfirmation(true);
+      if (result.success) {
+        // Mark as voted in localStorage (temporary solution)
+        const userVotes = JSON.parse(localStorage.getItem('userVotes') || '{}');
+        userVotes[election.id] = true;
+        localStorage.setItem('userVotes', JSON.stringify(userVotes));
+        
+        // Generate transaction ID and redirect to confirmation page
+        const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+        announceToScreenReader('Vote submitted successfully');
+        navigate(`/vote-confirmation?transactionId=${transactionId}&electionId=${election.id}&candidateId=${formData.candidateId}`);
+      }
+    } catch (error) {
+      console.error('Vote submission error:', error);
     }
   };
 
-  const handleViewResults = () => {
-    navigate(`/results/${election.id}`);
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    clearError();
+    handleSubmit(handleVoteSubmit);
   };
 
-  const handleBackToElections = () => {
-    navigate('/elections');
+  const handleCancelVote = () => {
+    setShowConfirmationModal(false);
+    announceToScreenReader('Vote cancelled');
+  };
+
+  const handleConfirmVote = () => {
+    setShowConfirmationModal(false);
+    handleSubmit(handleVoteSubmit);
   };
 
   const formatDate = (dateString) => {
@@ -86,6 +139,11 @@ const Vote = () => {
 
   const getInitials = (name) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const getSelectedCandidate = () => {
+    if (!formData.candidateId || !election?.candidates) return null;
+    return election.candidates.find(c => c.id === parseInt(formData.candidateId));
   };
 
   if (isLoading && !election) {
@@ -122,7 +180,7 @@ const Vote = () => {
     );
   }
 
-  if (hasVoted || showConfirmation) {
+  if (hasVoted) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -135,10 +193,10 @@ const Vote = () => {
                   </svg>
                 </div>
                 <h3 className="text-lg leading-6 font-medium text-gray-900 mb-2">
-                  Vote Submitted Successfully!
+                  You have already voted in this election
                 </h3>
                 <p className="text-sm text-gray-500 mb-6">
-                  Your vote has been recorded for the {election.title}. Thank you for participating!
+                  You can view the results or return to the elections list.
                 </p>
                 <div className="space-y-3">
                   <button
@@ -162,6 +220,8 @@ const Vote = () => {
     );
   }
 
+  const selectedCandidate = getSelectedCandidate();
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -182,6 +242,24 @@ const Vote = () => {
 
           {/* Error Alert */}
           <ErrorAlert error={error} onClose={clearError} />
+
+          {/* Validation Summary */}
+          {hasTouchedErrors && (
+            <ValidationSummary
+              errors={errors}
+              touched={touched}
+              title="Please complete the following:"
+              onFieldClick={(fieldName) => {
+                if (fieldName === 'candidateId') {
+                  // Scroll to candidate selection
+                  const element = document.getElementById('candidate-selection');
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }
+              }}
+            />
+          )}
 
           {/* Election Information */}
           <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
@@ -216,23 +294,31 @@ const Vote = () => {
                 Select Your Candidate
               </h3>
               <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                Please select one candidate from the list below
+                Please select one candidate from the list below. Your vote is confidential and cannot be changed once submitted.
               </p>
             </div>
             
             <div className="border-t border-gray-200">
               <div className="p-6">
-                <form onSubmit={(e) => { e.preventDefault(); handleSubmitVote(); }}>
-                  <div className="space-y-3 sm:space-y-4">
+                <form onSubmit={handleFormSubmit}>
+                  <div id="candidate-selection" className="space-y-3 sm:space-y-4">
                     {election.candidates?.map((candidate, index) => (
-                      <div key={candidate.id} className="flex items-center p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div 
+                        key={candidate.id} 
+                        className={`flex items-center p-3 sm:p-4 border rounded-lg transition-all cursor-pointer ${
+                          formData.candidateId === candidate.id.toString()
+                            ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200'
+                            : 'border-gray-200 hover:bg-gray-50'
+                        }`}
+                        onClick={() => handleCandidateSelect(candidate.id.toString())}
+                      >
                         <input
                           id={`candidate-${candidate.id}`}
-                          name="candidate"
+                          name="candidateId"
                           type="radio"
                           value={candidate.id}
-                          checked={selectedCandidate === candidate.id}
-                          onChange={(e) => handleCandidateSelect(e.target.value)}
+                          checked={formData.candidateId === candidate.id.toString()}
+                          onChange={handleChange}
                           className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 flex-shrink-0"
                         />
                         <label 
@@ -262,16 +348,64 @@ const Vote = () => {
                     ))}
                   </div>
 
+                  {/* Error message for no selection */}
+                  {errors.candidateId && touched.candidateId && (
+                    <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                      <p className="text-sm text-red-600 flex items-center">
+                        <svg className="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        {errors.candidateId}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Confirmation Dialog */}
+                  {showConfirmation && selectedCandidate && (
+                    <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="flex items-start">
+                        <svg className="h-5 w-5 text-yellow-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <div className="ml-3 flex-1">
+                          <h3 className="text-sm font-medium text-yellow-800">
+                            Confirm Your Vote
+                          </h3>
+                          <div className="mt-2 text-sm text-yellow-700">
+                            <p>You are about to vote for:</p>
+                            <p className="font-semibold mt-1">{selectedCandidate.name}</p>
+                            <p className="mt-2">This action cannot be undone. Are you sure you want to proceed?</p>
+                          </div>
+                          <div className="mt-3 flex space-x-3">
+                            <button
+                              type="submit"
+                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-yellow-800 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                            >
+                              Yes, Submit Vote
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmation(false)}
+                              className="inline-flex items-center px-3 py-1.5 border border-yellow-300 text-xs font-medium rounded-md text-yellow-700 bg-white hover:bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Form Actions */}
                   <div className="mt-6 flex flex-col sm:flex-row-reverse gap-3">
                     <LoadingButton
                       type="submit"
-                      disabled={!selectedCandidate}
-                      isLoading={isLoading}
+                      disabled={!formData.candidateId}
+                      isLoading={isSubmitting}
                       loadingText="Submitting..."
                       className="w-full sm:w-auto"
                     >
-                      Submit Vote
+                      {showConfirmation ? 'Confirm Vote' : 'Submit Vote'}
                     </LoadingButton>
                     <button
                       type="button"
