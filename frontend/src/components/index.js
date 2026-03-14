@@ -18,3 +18,7 @@ export { default as VoteChart } from './VoteChart';
 export { default as EnhancedChart } from './EnhancedChart';
 export { default as AdvancedAnalytics } from './AdvancedAnalytics';
 export * from './SkeletonLoader';
+
+// Accessibility components
+export { default as AccessibilityProvider, SkipLinks } from './AccessibilityProvider';
+export { default as FocusTrap } from './FocusTrap';

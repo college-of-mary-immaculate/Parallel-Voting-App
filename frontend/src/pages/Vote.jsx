@@ -1,8 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useElectionStore, useAuthStore } from '../store';
-import { LoadingSpinner, ErrorAlert, LoadingButton, ValidationSummary } from '../components';
-import { useFormValidation } from '../hooks';
+import { 
+  LoadingSpinner, 
+  ErrorAlert, 
+  LoadingButton, 
+  EnhancedFormField, 
+  ValidationSummary,
+  FocusTrap
+} from '../components';
+import { useFormValidation, useAccessibility } from '../hooks';
 import { validationSchemas } from '../utils';
 
 const Vote = () => {
@@ -16,11 +23,8 @@ const Vote = () => {
     error, 
     clearError 
   } = useElectionStore();
-  const { user } = useAuthStore();
+  const { user, announceToScreenReader } = useAccessibility();
   
-  const [hasVoted, setHasVoted] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-
   const {
     formData,
     errors,
@@ -28,22 +32,25 @@ const Vote = () => {
     isSubmitting,
     hasTouchedErrors,
     handleChange,
+    handleBlur,
     handleSubmit,
     getFieldProps,
-    setFieldValue,
-    validateAllFields
+    resetForm
   } = useFormValidation(
     {
       candidateId: '',
-      confirmation: ''
+      confirmation: false
     },
     validationSchemas.voteSelection,
     {
       validateOnChange: true,
       validateOnBlur: true,
-      debounceMs: 0
+      debounceMs: 300
     }
   );
+
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [hasVoted, setHasVoted] = useState(false);
 
   useEffect(() => {
     fetchElections();
@@ -62,58 +69,56 @@ const Vote = () => {
   }, [election, user]);
 
   const handleCandidateSelect = (candidateId) => {
-    setFieldValue('candidateId', candidateId);
-    setShowConfirmation(false);
+    handleChange({ target: { name: 'candidateId', value: candidateId } });
+    announceToScreenReader(`Selected candidate ${candidateId}`);
   };
 
-  const handleSubmitVote = async (formData) => {
-    if (!formData.candidateId) {
+  const handleConfirmationChange = (e) => {
+    handleChange({ target: { name: 'confirmation', value: e.target.checked } });
+  };
+
+  const handleVoteSubmit = async (formData) => {
+    if (!showConfirmationModal) {
+      setShowConfirmationModal(true);
       return;
     }
 
-    // Show confirmation dialog before submitting
-    if (!showConfirmation) {
-      setShowConfirmation(true);
-      return;
-    }
+    try {
+      const result = await submitVote({
+        electionId: election.id,
+        candidateId: formData.candidateId
+      });
 
-    const result = await submitVote({
-      electionId: election.id,
-      candidateId: formData.candidateId
-    });
-
-    if (result.success) {
-      // Mark as voted in localStorage (temporary solution)
-      const userVotes = JSON.parse(localStorage.getItem('userVotes') || '{}');
-      userVotes[election.id] = true;
-      localStorage.setItem('userVotes', JSON.stringify(userVotes));
-      
-      // Generate transaction ID and redirect to confirmation page
-      const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-      navigate(`/vote-confirmation?transactionId=${transactionId}&electionId=${election.id}&candidateId=${formData.candidateId}`);
+      if (result.success) {
+        // Mark as voted in localStorage (temporary solution)
+        const userVotes = JSON.parse(localStorage.getItem('userVotes') || '{}');
+        userVotes[election.id] = true;
+        localStorage.setItem('userVotes', JSON.stringify(userVotes));
+        
+        // Generate transaction ID and redirect to confirmation page
+        const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+        announceToScreenReader('Vote submitted successfully');
+        navigate(`/vote-confirmation?transactionId=${transactionId}&electionId=${election.id}&candidateId=${formData.candidateId}`);
+      }
+    } catch (error) {
+      console.error('Vote submission error:', error);
     }
   };
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    clearError(); // Clear any previous errors
-    
-    // Validate that a candidate is selected
-    if (!formData.candidateId) {
-      setFieldValue('candidateId', '');
-      validateAllFields();
-      return;
-    }
-    
-    handleSubmit(handleSubmitVote);
+    clearError();
+    handleSubmit(handleVoteSubmit);
   };
 
-  const handleViewResults = () => {
-    navigate(`/results/${election.id}`);
+  const handleCancelVote = () => {
+    setShowConfirmationModal(false);
+    announceToScreenReader('Vote cancelled');
   };
 
-  const handleBackToElections = () => {
-    navigate('/elections');
+  const handleConfirmVote = () => {
+    setShowConfirmationModal(false);
+    handleSubmit(handleVoteSubmit);
   };
 
   const formatDate = (dateString) => {
