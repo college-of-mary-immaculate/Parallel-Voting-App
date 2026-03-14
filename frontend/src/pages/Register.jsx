@@ -2,7 +2,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store';
 import { LoadingButton, ErrorAlert, PasswordStrength } from '../components';
 import { EnhancedFormField, ValidationSummary } from '../components';
-import { useFormValidation, useAsyncValidation } from '../hooks';
+import { useFormValidation } from '../hooks';
 import { validationSchemas, checkPasswordStrength } from '../utils';
 
 const Register = () => {

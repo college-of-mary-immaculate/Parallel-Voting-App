@@ -12,7 +12,7 @@ import {
   EnhancedFormField,
   ValidationSummary
 } from '../components';
-import { useFormValidation, useAsyncValidation } from '../hooks';
+import { useFormValidation } from '../hooks';
 import { validationSchemas, checkPasswordStrength } from '../utils';
 
 const UserProfile = () => {

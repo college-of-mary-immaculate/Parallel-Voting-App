@@ -9,7 +9,8 @@ import {
   ValidationSummary,
   FocusTrap
 } from '../components';
-import { useFormValidation, useAccessibility } from '../hooks';
+import { useFormValidation } from '../hooks';
+import { useAccessibility } from '../components/AccessibilityProvider';
 import { validationSchemas } from '../utils';
 
 const Vote = () => {

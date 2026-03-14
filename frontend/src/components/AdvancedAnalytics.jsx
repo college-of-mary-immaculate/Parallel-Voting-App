@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { EnhancedChart } from './EnhancedChart';
+import EnhancedChart from './EnhancedChart';
 
 const AdvancedAnalytics = ({ data, title, type = 'bar', height = 400 }) => {
   const [chartData, setChartData] = useState({ labels: [], datasets: [] });
