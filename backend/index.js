@@ -49,6 +49,7 @@ const adminRoutes = require('./src/routes/adminRoutes');
 const notificationRoutes = require('./src/routes/notificationRoutes');
 const securityRoutes = require('./src/routes/securityRoutes');
 const auditRoutes = require('./src/routes/auditRoutes');
+const exportRoutes = require('./src/routes/exportRoutes');
 const protectedRoutes = require('./src/routes/protectedRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/elections', electionRoutes);
@@ -62,6 +63,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/security', securityRoutes);
 app.use('/api/audit', auditRoutes);
+app.use('/api/export', exportRoutes);
 app.use('/api', protectedRoutes);
 
 // Error handling middleware
