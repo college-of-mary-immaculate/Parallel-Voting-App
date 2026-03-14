@@ -1,11 +1,10 @@
 const express = require('express');
-const http = require('http');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const { testConnection, closeConnections } = require('./src/config/database');
+const http = require('http');
+const { initializeSocket, setSocketInstance } = require('./src/config/socketConfig');
+const { requestLogger, errorAudit, requestId } = require('./src/middleware/auditMiddleware');
 const { startPeriodicCleanup } = require('./src/utils/tokenBlacklist');
-const { initializeSocket } = require('./src/config/socketConfig');
-const { setSocketInstance } = require('./src/utils/socketUtils');
 
 // Load environment variables
 dotenv.config();
@@ -23,6 +22,10 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Audit middleware
+app.use(requestId);
+app.use(requestLogger);
 
 // Basic route
 app.get('/', (req, res) => {
@@ -45,6 +48,7 @@ const analyticsRoutes = require('./src/routes/analyticsRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const notificationRoutes = require('./src/routes/notificationRoutes');
 const securityRoutes = require('./src/routes/securityRoutes');
+const auditRoutes = require('./src/routes/auditRoutes');
 const protectedRoutes = require('./src/routes/protectedRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/elections', electionRoutes);
@@ -57,9 +61,11 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/security', securityRoutes);
+app.use('/api/audit', auditRoutes);
 app.use('/api', protectedRoutes);
 
 // Error handling middleware
+app.use(errorAudit);
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
