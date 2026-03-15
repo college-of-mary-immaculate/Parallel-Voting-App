@@ -5,6 +5,7 @@ const http = require('http');
 const { initializeSocket, setSocketInstance } = require('./src/config/socketConfig');
 const { requestLogger, errorAudit, requestId } = require('./src/middleware/auditMiddleware');
 const { startPeriodicCleanup } = require('./src/utils/tokenBlacklist');
+const { securityHeaders, rateLimit, validateContentType, validateRequestSize } = require('./src/middleware/validationMiddleware');
 
 // Load environment variables
 dotenv.config();
@@ -20,8 +21,33 @@ app.use(cors({
   origin: process.env.HOST || 'http://localhost:3000',
   credentials: true
 }));
+
+// Security middleware
+app.use(securityHeaders);
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later'
+}));
+app.use(validateRequestSize('10mb'));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Content type validation for POST/PUT requests
+app.use('/api', (req, res, next) => {
+  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    const contentType = req.headers['content-type'];
+    if (!contentType || !contentType.includes('application/json') && !contentType.includes('application/x-www-form-urlencoded') && !contentType.includes('multipart/form-data')) {
+      return res.status(415).json({
+        success: false,
+        message: 'Unsupported media type',
+        code: 'UNSUPPORTED_MEDIA_TYPE'
+      });
+    }
+  }
+  next();
+});
 
 // Audit middleware
 app.use(requestId);
