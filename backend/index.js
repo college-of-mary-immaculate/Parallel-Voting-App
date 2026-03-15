@@ -5,7 +5,14 @@ const http = require('http');
 const { initializeSocket, setSocketInstance } = require('./src/config/socketConfig');
 const { requestLogger, errorAudit, requestId } = require('./src/middleware/auditMiddleware');
 const { startPeriodicCleanup } = require('./src/utils/tokenBlacklist');
-const { securityHeaders, rateLimit, validateContentType, validateRequestSize } = require('./src/middleware/validationMiddleware');
+const { securityHeaders, validateContentType, validateRequestSize } = require('./src/middleware/validationMiddleware');
+const { 
+  rateLimitMiddleware, 
+  endpointRateLimit, 
+  createRoleBasedRateLimit,
+  rateLimitStats,
+  initializeRateLimiting 
+} = require('./src/middleware/rateLimitMiddleware');
 
 // Load environment variables
 dotenv.config();
@@ -24,12 +31,16 @@ app.use(cors({
 
 // Security middleware
 app.use(securityHeaders);
-app.use(rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later'
-}));
 app.use(validateRequestSize('10mb'));
+
+// Initialize rate limiting
+initializeRateLimiting();
+
+// Apply general rate limiting
+app.use(rateLimitMiddleware.general);
+
+// Apply role-based rate limiting
+app.use(createRoleBasedRateLimit());
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -48,6 +59,9 @@ app.use('/api', (req, res, next) => {
   }
   next();
 });
+
+// Rate limiting statistics endpoint
+app.use('/api/rate-limit-stats', rateLimitStats);
 
 // Audit middleware
 app.use(requestId);
@@ -77,6 +91,17 @@ const securityRoutes = require('./src/routes/securityRoutes');
 const auditRoutes = require('./src/routes/auditRoutes');
 const exportRoutes = require('./src/routes/exportRoutes');
 const protectedRoutes = require('./src/routes/protectedRoutes');
+
+// Apply specific rate limiting to routes
+app.use('/api/auth', endpointRateLimit['/api/auth/login']);
+app.use('/api/auth', endpointRateLimit['/api/auth/register']);
+app.use('/api/auth', endpointRateLimit['/api/auth/reset-password']);
+app.use('/api/votes', endpointRateLimit['/api/votes']);
+app.use('/api/secure-votes', endpointRateLimit['/api/secure-votes']);
+app.use('/api/export', endpointRateLimit['/api/export']);
+app.use('/api/admin', endpointRateLimit['/api/admin']);
+app.use('/api/analytics', endpointRateLimit['/api/analytics']);
+
 app.use('/api/auth', authRoutes);
 app.use('/api/elections', electionRoutes);
 app.use('/api/candidates', candidateRoutes);
