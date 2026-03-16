@@ -19,6 +19,13 @@ const {
   cacheManagementMiddleware,
   createOptimizationRoutes
 } = require('./src/middleware/databaseOptimizationMiddleware');
+const {
+  apiVersioningMiddleware,
+  versionValidationMiddleware,
+  versionCompatibilityMiddleware,
+  versionRateLimitingMiddleware,
+  versionAnalyticsMiddleware
+} = require('./src/middleware/apiVersioningMiddleware');
 
 // Load environment variables
 dotenv.config();
@@ -63,6 +70,13 @@ app.use(databaseOptimizationMiddleware.healthCheck);
 app.use(cacheManagementMiddleware.cacheStats);
 app.use(cacheManagementMiddleware.cacheControl);
 app.use(cacheManagementMiddleware.cacheWarmer);
+
+// API versioning middleware
+app.use(apiVersioningMiddleware);
+app.use(versionValidationMiddleware);
+app.use(versionCompatibilityMiddleware);
+app.use(versionRateLimitingMiddleware);
+app.use(versionAnalyticsMiddleware);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -114,6 +128,8 @@ const auditRoutes = require('./src/routes/auditRoutes');
 const exportRoutes = require('./src/routes/exportRoutes');
 const protectedRoutes = require('./src/routes/protectedRoutes');
 const jwtSecurityRoutes = require('./src/routes/jwtSecurityRoutes');
+const apiVersioningRoutes = require('./src/routes/apiVersioningRoutes');
+const { versionedAuthRouter, versionedElectionRouter, versionedVoteRouter, versionedAnalyticsRouter } = require('./src/routes/versionedRouteExamples');
 
 // Apply specific rate limiting to routes
 app.use('/api/auth', endpointRateLimit['/api/auth/login']);
@@ -140,6 +156,18 @@ app.use('/api/security', securityRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api', protectedRoutes);
+app.use('/api/version', apiVersioningRoutes);
+
+// Versioned routes
+app.use('/api/v1/auth', versionedAuthRouter.getRouter('v1'));
+app.use('/api/v1/elections', versionedElectionRouter.getRouter('v1'));
+app.use('/api/v1/votes', versionedVoteRouter.getRouter('v1'));
+app.use('/api/v1/analytics', versionedAnalyticsRouter.getRouter('v1'));
+
+app.use('/api/v2/auth', versionedAuthRouter.getRouter('v2'));
+app.use('/api/v2/elections', versionedElectionRouter.getRouter('v2'));
+app.use('/api/v2/votes', versionedVoteRouter.getRouter('v2'));
+app.use('/api/v2/analytics', versionedAnalyticsRouter.getRouter('v2'));
 
 // Create optimization routes
 createOptimizationRoutes(app);
