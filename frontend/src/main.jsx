@@ -4,11 +4,14 @@ import { RouterProvider } from 'react-router-dom'
 import './index.css'
 import router from './router.jsx'
 import { AccessibilityProvider } from './components'
+import PWAManager from './components/PWAManager'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AccessibilityProvider>
-      <RouterProvider router={router} />
-    </AccessibilityProvider>
+    <PWAManager>
+      <AccessibilityProvider>
+        <RouterProvider router={router} />
+      </AccessibilityProvider>
+    </PWAManager>
   </StrictMode>,
 )
