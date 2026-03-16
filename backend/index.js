@@ -13,6 +13,12 @@ const {
   rateLimitStats,
   initializeRateLimiting 
 } = require('./src/middleware/rateLimitMiddleware');
+const {
+  databaseOptimizationMiddleware,
+  performanceMonitoringMiddleware,
+  cacheManagementMiddleware,
+  createOptimizationRoutes
+} = require('./src/middleware/databaseOptimizationMiddleware');
 
 // Load environment variables
 dotenv.config();
@@ -41,6 +47,22 @@ app.use(rateLimitMiddleware.general);
 
 // Apply role-based rate limiting
 app.use(createRoleBasedRateLimit());
+
+// Performance monitoring middleware
+app.use(performanceMonitoringMiddleware.requestTiming);
+app.use(performanceMonitoringMiddleware.memoryMonitoring);
+app.use(performanceMonitoringMiddleware.cpuMonitoring);
+
+// Database optimization middleware
+app.use(databaseOptimizationMiddleware.initialize);
+app.use(databaseOptimizationMiddleware.queryMonitor);
+app.use(databaseOptimizationMiddleware.cacheInvalidation);
+app.use(databaseOptimizationMiddleware.healthCheck);
+
+// Cache management middleware
+app.use(cacheManagementMiddleware.cacheStats);
+app.use(cacheManagementMiddleware.cacheControl);
+app.use(cacheManagementMiddleware.cacheWarmer);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -116,6 +138,9 @@ app.use('/api/security', securityRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api', protectedRoutes);
+
+// Create optimization routes
+createOptimizationRoutes(app);
 
 // Error handling middleware
 app.use(errorAudit);
