@@ -113,6 +113,7 @@ const securityRoutes = require('./src/routes/securityRoutes');
 const auditRoutes = require('./src/routes/auditRoutes');
 const exportRoutes = require('./src/routes/exportRoutes');
 const protectedRoutes = require('./src/routes/protectedRoutes');
+const jwtSecurityRoutes = require('./src/routes/jwtSecurityRoutes');
 
 // Apply specific rate limiting to routes
 app.use('/api/auth', endpointRateLimit['/api/auth/login']);
@@ -125,6 +126,7 @@ app.use('/api/admin', endpointRateLimit['/api/admin']);
 app.use('/api/analytics', endpointRateLimit['/api/analytics']);
 
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', jwtSecurityRoutes);
 app.use('/api/elections', electionRoutes);
 app.use('/api/candidates', candidateRoutes);
 app.use('/api/votes', voteRoutes);
