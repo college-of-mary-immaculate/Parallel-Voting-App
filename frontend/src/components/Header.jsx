@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store';
 import { useAccessibility } from './AccessibilityProvider';
+import ThemeToggle from './ThemeToggle';
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -165,7 +166,10 @@ const Header = () => {
           </div>
           
           {/* Desktop User Actions */}
-          <div className="hidden md:flex md:items-center">
+          <div className="hidden md:flex md:items-center md:space-x-4">
+            {/* Theme Toggle */}
+            <ThemeToggle variant="dropdown" size="sm" />
+            
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
                 <div className="flex items-center">
@@ -370,6 +374,11 @@ const Header = () => {
           
           {/* Mobile User Actions */}
           <div className="pt-4 pb-3 border-t border-gray-200">
+            {/* Theme Toggle for Mobile */}
+            <div className="px-2 mb-3">
+              <ThemeToggle variant="dropdown" size="sm" className="w-full" />
+            </div>
+            
             {isAuthenticated ? (
               <div className="px-2 space-y-1">
                 <div className="flex items-center px-3 py-2">
