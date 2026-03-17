@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:analyze": "vite build --mode analyze",
+    "build:report": "vite build && npx vite-bundle-analyzer dist/static/js/*.js",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "test": "vitest",
@@ -24,7 +26,16 @@
     "test:e2e:firefox": "playwright test --project=firefox",
     "test:e2e:safari": "playwright test --project=webkit",
     "test:e2e:mobile": "playwright test --project=\"Mobile Chrome\"",
-    "test:all": "npm run test:run && npm run test:e2e"
+    "test:e2e:performance": "playwright test --project=chromium --grep \"Performance\"",
+    "test:all": "npm run test:run && npm run test:e2e",
+    "perf:audit": "npx lighthouse http://localhost:5173 --output=html --output-path=./lighthouse-report",
+    "perf:bundle": "npm run build:analyze",
+    "perf:size": "npx bundlesize",
+    "perf:monitor": "VITE_PERFORMANCE_MONITORING=true npm run dev",
+    "perf:optimize": "npm run build && npm run perf:audit",
+    "size-check": "npx bundlesize",
+    "analyze:bundle": "npx webpack-bundle-analyzer dist/static/js/*.js",
+    "deploy:staging": "npm run build && npm run perf:audit"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.2.1",
