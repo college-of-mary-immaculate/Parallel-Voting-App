@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:prod": "node scripts/build.js production",
+    "build:staging": "node scripts/build.js staging",
     "build:analyze": "vite build --mode analyze",
     "build:report": "vite build && npx vite-bundle-analyzer dist/static/js/*.js",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
@@ -35,7 +37,18 @@
     "perf:optimize": "npm run build && npm run perf:audit",
     "size-check": "npx bundlesize",
     "analyze:bundle": "npx webpack-bundle-analyzer dist/static/js/*.js",
-    "deploy:staging": "npm run build && npm run perf:audit"
+    "deploy:staging": "node scripts/deploy.js staging",
+    "deploy:production": "node scripts/deploy.js production",
+    "deploy:dry-run": "node scripts/deploy.js production --dry-run",
+    "env:setup": "node scripts/env-setup.js",
+    "env:validate": "node scripts/env-setup.js validate",
+    "env:dev": "node scripts/env-setup.js setup development",
+    "env:staging": "node scripts/env-setup.js setup staging",
+    "env:prod": "node scripts/env-setup.js setup production",
+    "ci:build": "npm run build:prod && npm run test:run && npm run test:e2e:chrome",
+    "ci:deploy": "npm run ci:build && npm run deploy:staging",
+    "release:prepare": "npm run build:prod && npm run test:all && npm run perf:audit",
+    "release:deploy": "npm run release:prepare && npm run deploy:production"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.2.1",
