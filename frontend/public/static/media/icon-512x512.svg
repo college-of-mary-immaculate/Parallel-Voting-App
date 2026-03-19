@@ -1,0 +1,11 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="64" fill="#4F46E5"/>
+  <path d="M256 80C164.9 80 80 164.9 80 256C80 347.1 164.9 432 256 432C347.1 432 432 347.1 432 256C432 164.9 347.1 80 256 80Z" fill="white" fill-opacity="0.1"/>
+  <path d="M256 112C178.8 112 112 178.8 112 256C112 333.2 178.8 400 256 400C333.2 400 400 333.2 400 256C400 178.8 333.2 112 256 112Z" fill="white" fill-opacity="0.2"/>
+  <circle cx="256" cy="256" r="48" fill="white"/>
+  <path d="M256 208L288 240L256 272L224 240L256 208Z" fill="#4F46E5"/>
+  <path d="M208 256L240 288L272 256L240 224L208 256Z" fill="#4F46E5"/>
+  <path d="M256 304L288 272L256 240L224 272L256 304Z" fill="#4F46E5"/>
+  <path d="M304 256L272 224L240 256L272 288L304 256Z" fill="#4F46E5"/>
+  <text x="256" y="460" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="24" font-weight="bold">VOTE</text>
+</svg>

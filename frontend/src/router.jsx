@@ -1,21 +1,65 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { Suspense } from 'react';
 import Layout from './components/Layout';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import Elections from './pages/Elections';
-import Vote from './pages/Vote';
-import Results from './pages/Results';
-import RealTimeDashboard from './pages/RealTimeDashboard';
-import Analytics from './pages/Analytics';
-import DetailedAnalytics from './pages/DetailedAnalytics';
-import AdminDashboard from './pages/AdminDashboard';
-import ManageElections from './pages/ManageElections';
-import ManageCandidates from './pages/ManageCandidates';
-import ManageUsers from './pages/ManageUsers';
-import AdminSettings from './pages/AdminSettings';
-import VoteConfirmation from './pages/VoteConfirmation';
-import UserProfile from './pages/UserProfile';
+import LoadingSpinner from './components/LoadingSpinner';
+import ErrorBoundary from './components/ErrorBoundary';
+
+// Lazy loading components
+const Login = React.lazy(() => import('./pages/Login'));
+const Register = React.lazy(() => import('./pages/Register'));
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const Elections = React.lazy(() => import('./pages/Elections'));
+const Vote = React.lazy(() => import('./pages/Vote'));
+const Results = React.lazy(() => import('./pages/Results'));
+const RealTimeDashboard = React.lazy(() => import('./pages/RealTimeDashboard'));
+const Analytics = React.lazy(() => import('./pages/Analytics'));
+const DetailedAnalytics = React.lazy(() => import('./pages/DetailedAnalytics'));
+const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
+const ManageElections = React.lazy(() => import('./pages/ManageElections'));
+const ManageCandidates = React.lazy(() => import('./pages/ManageCandidates'));
+const ManageUsers = React.lazy(() => import('./pages/ManageUsers'));
+const AdminSettings = React.lazy(() => import('./pages/AdminSettings'));
+const VoteConfirmation = React.lazy(() => import('./pages/VoteConfirmation'));
+const UserProfile = React.lazy(() => import('./pages/UserProfile'));
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="text-center">
+      <LoadingSpinner size="lg" message="Loading page..." />
+    </div>
+  </div>
+);
+
+// Wrapper for lazy loaded components with error boundary
+const LazyWrapper = ({ children }) => (
+  <ErrorBoundary>
+    <Suspense fallback={<LoadingFallback />}>
+      {children}
+    </Suspense>
+  </ErrorBoundary>
+);
+
+// Preload critical routes after initial load
+const preloadRoutes = () => {
+  setTimeout(() => {
+    // Preload commonly accessed routes
+    import('./pages/Elections');
+    import('./pages/Vote');
+    import('./pages/Results');
+  }, 2000);
+  
+  setTimeout(() => {
+    // Preload admin routes for admin users
+    import('./pages/AdminDashboard');
+    import('./pages/Analytics');
+  }, 5000);
+};
+
+// Initialize preloading
+if (typeof window !== 'undefined') {
+  preloadRoutes();
+}
 
 const router = createBrowserRouter([
   {
@@ -26,7 +70,9 @@ const router = createBrowserRouter([
     path: '/login',
     element: (
       <Layout>
-        <Login />
+        <LazyWrapper>
+          <Login />
+        </LazyWrapper>
       </Layout>
     ),
   },
@@ -34,7 +80,9 @@ const router = createBrowserRouter([
     path: '/register',
     element: (
       <Layout>
-        <Register />
+        <LazyWrapper>
+          <Register />
+        </LazyWrapper>
       </Layout>
     ),
   },
@@ -42,7 +90,9 @@ const router = createBrowserRouter([
     path: '/dashboard',
     element: (
       <Layout>
-        <Dashboard />
+        <LazyWrapper>
+          <Dashboard />
+        </LazyWrapper>
       </Layout>
     ),
   },
@@ -50,7 +100,9 @@ const router = createBrowserRouter([
     path: '/elections',
     element: (
       <Layout>
-        <Elections />
+        <LazyWrapper>
+          <Elections />
+        </LazyWrapper>
       </Layout>
     ),
   },
@@ -58,7 +110,9 @@ const router = createBrowserRouter([
     path: '/vote/:id',
     element: (
       <Layout>
-        <Vote />
+        <LazyWrapper>
+          <Vote />
+        </LazyWrapper>
       </Layout>
     ),
   },
@@ -66,7 +120,9 @@ const router = createBrowserRouter([
     path: '/vote-confirmation',
     element: (
       <Layout>
-        <VoteConfirmation />
+        <LazyWrapper>
+          <VoteConfirmation />
+        </LazyWrapper>
       </Layout>
     ),
   },
@@ -74,7 +130,9 @@ const router = createBrowserRouter([
     path: '/profile',
     element: (
       <Layout>
-        <UserProfile />
+        <LazyWrapper>
+          <UserProfile />
+        </LazyWrapper>
       </Layout>
     ),
   },
@@ -82,7 +140,9 @@ const router = createBrowserRouter([
     path: '/results',
     element: (
       <Layout>
-        <Results />
+        <LazyWrapper>
+          <Results />
+        </LazyWrapper>
       </Layout>
     ),
   },
@@ -90,7 +150,9 @@ const router = createBrowserRouter([
     path: '/results/:id',
     element: (
       <Layout>
-        <Results />
+        <LazyWrapper>
+          <Results />
+        </LazyWrapper>
       </Layout>
     ),
   },
@@ -98,7 +160,9 @@ const router = createBrowserRouter([
     path: '/realtime',
     element: (
       <Layout>
-        <RealTimeDashboard />
+        <LazyWrapper>
+          <RealTimeDashboard />
+        </LazyWrapper>
       </Layout>
     ),
   },
@@ -106,7 +170,9 @@ const router = createBrowserRouter([
     path: '/analytics',
     element: (
       <Layout>
-        <Analytics />
+        <LazyWrapper>
+          <Analytics />
+        </LazyWrapper>
       </Layout>
     ),
   },
@@ -114,7 +180,9 @@ const router = createBrowserRouter([
     path: '/detailed-analytics',
     element: (
       <Layout>
-        <DetailedAnalytics />
+        <LazyWrapper>
+          <DetailedAnalytics />
+        </LazyWrapper>
       </Layout>
     ),
   },
@@ -122,7 +190,9 @@ const router = createBrowserRouter([
     path: '/admin',
     element: (
       <Layout>
-        <AdminDashboard />
+        <LazyWrapper>
+          <AdminDashboard />
+        </LazyWrapper>
       </Layout>
     ),
   },
@@ -130,7 +200,9 @@ const router = createBrowserRouter([
     path: '/admin/elections',
     element: (
       <Layout>
-        <ManageElections />
+        <LazyWrapper>
+          <ManageElections />
+        </LazyWrapper>
       </Layout>
     ),
   },
@@ -138,7 +210,9 @@ const router = createBrowserRouter([
     path: '/admin/candidates',
     element: (
       <Layout>
-        <ManageCandidates />
+        <LazyWrapper>
+          <ManageCandidates />
+        </LazyWrapper>
       </Layout>
     ),
   },
@@ -146,7 +220,9 @@ const router = createBrowserRouter([
     path: '/admin/users',
     element: (
       <Layout>
-        <ManageUsers />
+        <LazyWrapper>
+          <ManageUsers />
+        </LazyWrapper>
       </Layout>
     ),
   },
@@ -154,7 +230,9 @@ const router = createBrowserRouter([
     path: '/admin/settings',
     element: (
       <Layout>
-        <AdminSettings />
+        <LazyWrapper>
+          <AdminSettings />
+        </LazyWrapper>
       </Layout>
     ),
   },

@@ -21,3 +21,10 @@ export * from './SkeletonLoader';
 // Accessibility components
 export { default as AccessibilityProvider, SkipLinks } from './AccessibilityProvider';
 export { default as FocusTrap } from './FocusTrap';
+
+// PWA components
+export { default as PWAManager } from './PWAManager';
+export { default as OfflineStatus } from './OfflineStatus';
+
+// Theme components
+export { default as ThemeToggle } from './ThemeToggle';

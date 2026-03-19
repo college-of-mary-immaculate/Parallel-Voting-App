@@ -1,7 +1,6 @@
 @import "tailwindcss";
-
-/* Import accessibility styles */
-@import './styles/accessibility.css';
+@import "./styles/accessibility.css";
+@import "./styles/theme.css";
 
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
