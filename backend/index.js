@@ -26,6 +26,13 @@ const {
   versionRateLimitingMiddleware,
   versionAnalyticsMiddleware
 } = require('./src/middleware/apiVersioningMiddleware');
+const {
+  staticDataCache,
+  userDataCache,
+  analyticsCache,
+  writeOperationInvalidation,
+  cacheStats
+} = require('./src/middleware/cacheMiddleware');
 
 // Load environment variables
 dotenv.config();
@@ -78,6 +85,9 @@ app.use(versionCompatibilityMiddleware);
 app.use(versionRateLimitingMiddleware);
 app.use(versionAnalyticsMiddleware);
 
+// Caching middleware
+app.use(cacheStats);
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -129,6 +139,7 @@ const exportRoutes = require('./src/routes/exportRoutes');
 const protectedRoutes = require('./src/routes/protectedRoutes');
 const jwtSecurityRoutes = require('./src/routes/jwtSecurityRoutes');
 const apiVersioningRoutes = require('./src/routes/apiVersioningRoutes');
+const cacheRoutes = require('./src/routes/cacheRoutes');
 const { versionedAuthRouter, versionedElectionRouter, versionedVoteRouter, versionedAnalyticsRouter } = require('./src/routes/versionedRouteExamples');
 
 // Apply specific rate limiting to routes
@@ -157,6 +168,18 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api', protectedRoutes);
 app.use('/api/version', apiVersioningRoutes);
+app.use('/api/cache', cacheRoutes);
+
+// Apply caching middleware to specific routes
+app.use('/api/elections', staticDataCache);
+app.use('/api/candidates', staticDataCache);
+app.use('/api/analytics', analyticsCache);
+app.use('/api/auth/profile', userDataCache);
+
+// Apply cache invalidation to write operations
+app.use('/api/elections', writeOperationInvalidation);
+app.use('/api/candidates', writeOperationInvalidation);
+app.use('/api/votes', writeOperationInvalidation);
 
 // Versioned routes
 app.use('/api/v1/auth', versionedAuthRouter.getRouter('v1'));
