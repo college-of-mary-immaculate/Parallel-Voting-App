@@ -1,0 +1,240 @@
+version: '3.8'
+
+services:
+  # MySQL Master Database
+  mysql_master:
+    image: mariadb:10.3
+    container_name: mysql_master
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: master_root_password
+      MYSQL_DATABASE: voting_db
+      MYSQL_USER: voting_user
+      MYSQL_PASSWORD: voting_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./master/data:/var/lib/mysql
+      - ./master/conf/mysql.conf.cnf:/etc/mysql/conf.d/mysql.conf.cnf
+      - ./db:/docker-entrypoint-initdb.d
+    networks:
+      - voting-network
+    command: --server-id=1 --log-bin=mysql-bin --binlog-format=ROW --gtid-mode=ON --enforce-gtid-consistency=true
+
+  # MySQL Slave 1
+  mysql_slave1:
+    image: mariadb:10.3
+    container_name: mysql_slave1
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: slave_root_password
+      MYSQL_DATABASE: voting_db
+      MYSQL_USER: voting_user
+      MYSQL_PASSWORD: voting_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./slave1/data:/var/lib/mysql
+      - ./slave1/conf/mysql.conf.cnf:/etc/mysql/conf.d/mysql.conf.cnf
+    networks:
+      - voting-network
+    depends_on:
+      - mysql_master
+    command: --server-id=2 --relay-log=relay-bin --read-only=1 --gtid-mode=ON --enforce-gtid-consistency=true
+
+  # MySQL Slave 2
+  mysql_slave2:
+    image: mariadb:10.3
+    container_name: mysql_slave2
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: slave_root_password
+      MYSQL_DATABASE: voting_db
+      MYSQL_USER: voting_user
+      MYSQL_PASSWORD: voting_password
+    ports:
+      - "3308:3306"
+    volumes:
+      - ./slave2/data:/var/lib/mysql
+      - ./slave2/conf/mysql.conf.cnf:/etc/mysql/conf.d/mysql.conf.cnf
+    networks:
+      - voting-network
+    depends_on:
+      - mysql_master
+    command: --server-id=3 --relay-log=relay-bin --read-only=1 --gtid-mode=ON --enforce-gtid-consistency=true
+
+  # MySQL Slave 3
+  mysql_slave3:
+    image: mariadb:10.3
+    container_name: mysql_slave3
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: slave_root_password
+      MYSQL_DATABASE: voting_db
+      MYSQL_USER: voting_user
+      MYSQL_PASSWORD: voting_password
+    ports:
+      - "3309:3306"
+    volumes:
+      - ./slave3/data:/var/lib/mysql
+      - ./slave3/conf/mysql.conf.cnf:/etc/mysql/conf.d/mysql.conf.cnf
+    networks:
+      - voting-network
+    depends_on:
+      - mysql_master
+    command: --server-id=4 --relay-log=relay-bin --read-only=1 --gtid-mode=ON --enforce-gtid-consistency=true
+
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: voting_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis/data:/data
+    networks:
+      - voting-network
+    command: redis-server --appendonly yes
+
+  # HAProxy Load Balancer
+  haproxy:
+    image: haproxy:2.8
+    container_name: voting_haproxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "8404:8404"  # Stats dashboard
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    networks:
+      - voting-network
+    depends_on:
+      - app_server1
+      - app_server2
+      - app_server3
+
+  # Application Server 1 (Publisher)
+  app_server1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voting_app1
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - API_PORT=5000
+      - PUBLISHER=true
+      - PORT=3000
+      - SERVER_NAME=app_server1
+      - PORTS=app_server2:3001,app_server3:3002
+      - MASTER_DB_HOST=mysql_master
+      - MASTER_DB_USER=voting_user
+      - MASTER_DB_PASS=voting_password
+      - MASTER_DB_NAME=voting_db
+      - MASTER_DB_PORT=3306
+      - SLAVE_DB_HOST=mysql_slave1
+      - SLAVE_DB_USER=voting_user
+      - SLAVE_DB_PASS=voting_password
+      - SLAVE_DB_NAME=voting_db
+      - SLAVE_DB_PORT=3306
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "3000:3000"
+      - "5000:5000"
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - voting-network
+    depends_on:
+      - mysql_master
+      - mysql_slave1
+      - redis
+
+  # Application Server 2 (Subscriber)
+  app_server2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voting_app2
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - API_PORT=5001
+      - PUBLISHER=false
+      - PORT=3001
+      - SERVER_NAME=app_server2
+      - PORTS=app_server1:3000,app_server3:3002
+      - MASTER_DB_HOST=mysql_master
+      - MASTER_DB_USER=voting_user
+      - MASTER_DB_PASS=voting_password
+      - MASTER_DB_NAME=voting_db
+      - MASTER_DB_PORT=3306
+      - SLAVE_DB_HOST=mysql_slave2
+      - SLAVE_DB_USER=voting_user
+      - SLAVE_DB_PASS=voting_password
+      - SLAVE_DB_NAME=voting_db
+      - SLAVE_DB_PORT=3306
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "3001:3001"
+      - "5001:5001"
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - voting-network
+    depends_on:
+      - mysql_master
+      - mysql_slave2
+      - redis
+
+  # Application Server 3 (Subscriber)
+  app_server3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voting_app3
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - API_PORT=5002
+      - PUBLISHER=false
+      - PORT=3002
+      - SERVER_NAME=app_server3
+      - PORTS=app_server1:3000,app_server2:3001
+      - MASTER_DB_HOST=mysql_master
+      - MASTER_DB_USER=voting_user
+      - MASTER_DB_PASS=voting_password
+      - MASTER_DB_NAME=voting_db
+      - MASTER_DB_PORT=3306
+      - SLAVE_DB_HOST=mysql_slave3
+      - SLAVE_DB_USER=voting_user
+      - SLAVE_DB_PASS=voting_password
+      - SLAVE_DB_NAME=voting_db
+      - SLAVE_DB_PORT=3306
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "3002:3002"
+      - "5002:5002"
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - voting-network
+    depends_on:
+      - mysql_master
+      - mysql_slave3
+      - redis
+
+networks:
+  voting-network:
+    driver: bridge
+
+volumes:
+  master_data:
+  slave1_data:
+  slave2_data:
+  slave3_data:
+  redis_data:

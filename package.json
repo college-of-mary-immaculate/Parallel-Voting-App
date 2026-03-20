@@ -11,6 +11,10 @@
     "dev:frontend": "concurrently --names \"socket,frontend\" --prefix-colors \"red,green\" \"npm run dev\" \"npm run frontend\"",
     "build": "cd frontend && npm run build",
     "start": "concurrently --names \"build,publisher,subscriber1,subscriber2\" --prefix-colors \"blue,red,magenta,yellow\" \"npm run build\" \"PUBLISHER=true PORT=3000 npm run dev\" \"PUBLISHER=false PORT=3001 npm run dev\" \"PUBLISHER=false PORT=3002 npm run dev\"",
+    "cluster:start": "chmod +x scripts/start-cluster.sh && ./scripts/start-cluster.sh",
+    "cluster:stop": "docker-compose down",
+    "cluster:restart": "docker-compose restart",
+    "cluster:logs": "docker-compose logs -f",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -41,6 +45,8 @@
     "nodemailer": "^7.0.12",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
+    "socket.io-redis-adapter": "^8.2.1",
+    "redis": "^4.6.13",
     "uuid": "^13.0.0",
     "validator": "^13.15.26"
   },

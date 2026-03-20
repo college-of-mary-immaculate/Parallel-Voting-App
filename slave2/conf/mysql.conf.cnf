@@ -1,0 +1,31 @@
+[mysqld]
+# Slave 2 Configuration
+server-id = 3
+relay-log = relay-bin
+read-only = 1
+gtid-mode = ON
+enforce-gtid-consistency = true
+
+# Performance settings
+max_connections = 1000
+innodb_buffer_pool_size = 256M
+query_cache_size = 64M
+query_cache_type = 1
+
+# Replication settings
+relay-log-index = relay-bin.index
+expire_logs_days = 7
+max_binlog_size = 100M
+
+# Character set
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+
+# General settings
+bind-address = 0.0.0.0
+port = 3306
+
+# Skip replication for certain tables if needed
+# replicate-ignore-db = mysql
+# replicate-ignore-db = information_schema
+# replicate-ignore-db = performance_schema
