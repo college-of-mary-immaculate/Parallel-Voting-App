@@ -74,6 +74,116 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Elections endpoint
+app.get('/api/elections', (req, res) => {
+  res.json({
+    success: true,
+    data: [
+      {
+        id: 1,
+        title: 'Student Council Election 2024',
+        description: 'Election for student council representatives',
+        status: 'active',
+        startTime: '2024-03-20T09:00:00',
+        endTime: '2024-03-20T17:00:00',
+        candidates: [
+          { id: 1, name: 'Alice Johnson', party: 'Independent', votes: 150 },
+          { id: 2, name: 'Bob Smith', party: 'Democratic', votes: 120 },
+          { id: 3, name: 'Charlie Davis', party: 'Green', votes: 95 }
+        ],
+        totalVotes: 365
+      },
+      {
+        id: 2,
+        title: 'Technology Committee Election 2024',
+        description: 'Election for technology committee members',
+        status: 'completed',
+        startTime: '2024-02-15T10:00:00',
+        endTime: '2024-02-15T16:00:00',
+        candidates: [
+          { id: 1, name: 'David Lee', party: 'Tech', votes: 89 },
+          { id: 2, name: 'Eva Martinez', party: 'Tech', votes: 134 }
+        ],
+        totalVotes: 223
+      }
+    ]
+  });
+});
+
+// Login endpoint
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  
+  // Mock authentication
+  if (email === 'test@example.com' && password === 'Test123') {
+    res.json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        user: {
+          userId: 1,
+          vin: 'VTR123456',
+          fullname: 'Test User',
+          email: 'test@example.com',
+          role: 'voter'
+        },
+        token: 'mock-jwt-token-' + Date.now()
+      }
+    });
+  } else {
+    res.json({
+      success: false,
+      message: 'Invalid credentials',
+      error: 'Email or password incorrect'
+    });
+  }
+});
+
+// Vote endpoint
+app.post('/api/votes', (req, res) => {
+  const { electionId, candidateId, voterId } = req.body;
+  
+  // Mock vote processing
+  if (electionId && candidateId && voterId) {
+    res.json({
+      success: true,
+      message: 'Vote cast successfully',
+      data: {
+        electionId,
+        candidateId,
+        voterId,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } else {
+    res.json({
+      success: false,
+      message: 'Invalid vote data',
+      error: 'Missing required fields'
+    });
+  }
+});
+
+// Results endpoint
+app.get('/api/results', (req, res) => {
+  res.json({
+    success: true,
+    data: [
+      {
+        id: 1,
+        title: 'Student Council Election 2024',
+        results: [
+          { candidateId: 1, candidateName: 'Alice Johnson', votes: 150, percentage: 41.1 },
+          { candidateId: 2, candidateName: 'Bob Smith', votes: 120, percentage: 32.9 },
+          { candidateId: 3, candidateName: 'Charlie Davis', votes: 95, percentage: 26.0 }
+        ],
+        totalVotes: 365,
+        winner: { candidateId: 1, candidateName: 'Alice Johnson' }
+      }
+    ]
+  });
+});
+
 // Socket.io connection handling
 io.on('connection', (socket) => {
   console.log(`🔗 ${PUBLISHER ? 'MASTER' : 'SLAVE'} connected: ${socket.id}`);

@@ -10,7 +10,7 @@ export const useRealTime = (electionId) => {
   const [votingActivity, setVotingActivity] = useState([]);
   const [useMockData, setUseMockData] = useState(false);
 
-  const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:3001';
+  const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:3000';
   const mockIntervalRef = useRef(null);
 
   // Initialize with mock data for testing
@@ -20,147 +20,117 @@ export const useRealTime = (electionId) => {
       const mockData = generateMockElectionData(electionId);
       setLiveResults(mockData);
       setLastUpdate(new Date());
-      setUseMockData(true);
-      
-      // Simulate real-time updates
-      if (mockIntervalRef.current) {
-        clearInterval(mockIntervalRef.current);
-      }
-      
-      mockIntervalRef.current = simulateRealTimeUpdates((data) => {
-        if (data.type === 'RESULTS_UPDATE') {
-          setLiveResults(data.payload.results);
-          setLastUpdate(new Date());
-          
-          // Add to voting activity
-          setVotingActivity(prev => [
-            {
-              id: Date.now(),
-              type: 'vote',
-              candidateId: data.payload.results.candidates[0]?.id,
-              candidateName: data.payload.results.candidates[0]?.name || 'Unknown',
-              timestamp: new Date()
-            },
-            ...prev.slice(0, 9)
-          ]);
-        }
-      }, 3000);
     }
+  }, [electionId]);
 
-    return () => {
-      if (mockIntervalRef.current) {
-        clearInterval(mockIntervalRef.current);
-      }
-    };
-  }, [electionId, liveResults]);
-
+  // WebSocket connection
   useEffect(() => {
     if (!useMockData) {
-      const socket = websocketService.connect(wsUrl);
+      const connectWebSocket = () => {
+        try {
+          websocketService.connect(wsUrl);
+          setIsConnected(true);
+          setError(null);
+        } catch (err) {
+          console.error('WebSocket connection failed:', err);
+          setError(err.message);
+          setIsConnected(false);
+        }
+      };
 
-      socket.onopen = () => {
+      connectWebSocket();
+
+      // Set up event listeners
+      websocketService.on('connect', () => {
+        console.log(' Real-time connected');
         setIsConnected(true);
         setError(null);
-        // Subscribe to election updates
-        websocketService.send({
-          type: 'SUBSCRIBE_ELECTION',
-          payload: { electionId }
-        });
-      };
+      });
 
-      socket.onclose = () => {
+      websocketService.on('disconnect', () => {
+        console.log(' Real-time disconnected');
+        setIsConnected(false);
+      });
+
+      websocketService.on('vote-update', (data) => {
+        console.log(' Vote update received:', data);
+        setLiveResults(prev => ({
+          ...prev,
+          votes: data.votes,
+          lastUpdate: new Date()
+        }));
+        setLastUpdate(new Date());
+      });
+
+      websocketService.on('election-update', (data) => {
+        console.log(' Election update received:', data);
+        setLiveResults(prev => ({
+          ...prev,
+          ...data,
+          lastUpdate: new Date()
+        }));
+        setLastUpdate(new Date());
+      });
+
+      // Cleanup on unmount
+      return () => {
+        websocketService.disconnect();
         setIsConnected(false);
       };
-
-      socket.onerror = () => {
-        setError('Connection error');
-      };
-
-      return () => {
-        websocketService.send({
-          type: 'UNSUBSCRIBE_ELECTION',
-          payload: { electionId }
-        });
-      };
-    } else {
-      // Mock connection status
-      setIsConnected(true);
-      setError(null);
     }
-  }, [electionId, wsUrl, useMockData]);
 
-  const handleVoteUpdate = useCallback((data) => {
-    if (data.electionId === electionId) {
-      setLiveResults(data.results);
-      setLastUpdate(new Date());
-      
-      // Add to voting activity
-      setVotingActivity(prev => [
-        {
-          id: Date.now(),
-          type: 'vote',
-          candidateId: data.candidateId,
-          candidateName: data.candidateName,
-          timestamp: new Date()
-        },
-        ...prev.slice(0, 9) // Keep only last 10 activities
-      ]);
-    }
-  }, [electionId]);
+    return connectWebSocket;
+  }, [electionId, useMockData, wsUrl]);
 
-  const handleResultsUpdate = useCallback((data) => {
-    if (data.electionId === electionId) {
-      setLiveResults(data.results);
-      setLastUpdate(new Date());
-    }
-  }, [electionId]);
-
-  const handleElectionStatus = useCallback((data) => {
-    if (data.electionId === electionId) {
-      // Handle election status changes
-      console.log('Election status changed:', data.status);
-    }
-  }, [electionId]);
-
+  // Mock data simulation for testing
   useEffect(() => {
-    if (!useMockData) {
-      websocketService.subscribe('VOTE_UPDATE', handleVoteUpdate);
-      websocketService.subscribe('RESULTS_UPDATE', handleResultsUpdate);
-      websocketService.subscribe('ELECTION_STATUS', handleElectionStatus);
+    if (useMockData && electionId) {
+      mockIntervalRef.current = setInterval(() => {
+        const mockUpdate = simulateRealTimeUpdates(electionId);
+        setLiveResults(prev => ({
+          ...prev,
+          ...mockUpdate,
+          lastUpdate: new Date()
+        }));
+        setLastUpdate(new Date());
+      }, 5000);
 
       return () => {
-        websocketService.unsubscribe('VOTE_UPDATE', handleVoteUpdate);
-        websocketService.unsubscribe('RESULTS_UPDATE', handleResultsUpdate);
-        websocketService.unsubscribe('ELECTION_STATUS', handleElectionStatus);
+        if (mockIntervalRef.current) {
+          clearInterval(mockIntervalRef.current);
+        }
       };
     }
-  }, [handleVoteUpdate, handleResultsUpdate, handleElectionStatus, useMockData]);
+  }, [useMockData, electionId]);
 
-  const sendVote = useCallback((candidateId) => {
-    if (useMockData) {
-      // Simulate vote in mock mode
-      const mockData = generateMockElectionData(electionId);
-      const candidateIndex = mockData.candidates.findIndex(c => c.id === candidateId);
-      if (candidateIndex !== -1) {
-        mockData.candidates[candidateIndex].votes += 1;
-        mockData.totalVotes = mockData.candidates.reduce((sum, candidate) => sum + candidate.votes, 0);
-        setLiveResults(mockData);
-        setLastUpdate(new Date());
-      }
-    } else {
-      websocketService.send({
-        type: 'CAST_VOTE',
-        payload: {
-          electionId,
-          candidateId
-        }
+  // Send vote via WebSocket
+  const sendVote = useCallback((electionId, candidateId, voterId) => {
+    if (isConnected) {
+      websocketService.emit('vote-cast', {
+        electionId,
+        candidateId,
+        voterId,
+        timestamp: new Date().toISOString()
       });
+      
+      // Add to local activity
+      setVotingActivity(prev => [...prev, {
+        type: 'vote',
+        electionId,
+        candidateId,
+        voterId,
+        timestamp: new Date().toISOString()
+      }]);
     }
-  }, [electionId, useMockData]);
+  }, [isConnected]);
 
-  const clearActivity = useCallback(() => {
-    setVotingActivity([]);
-  }, []);
+  // Manual reconnection
+  const reconnect = useCallback(() => {
+    websocketService.disconnect();
+    setTimeout(() => {
+      websocketService.connect(wsUrl);
+    }, 1000);
+  }, [wsUrl]);
 
   return {
     isConnected,
@@ -169,8 +139,8 @@ export const useRealTime = (electionId) => {
     error,
     votingActivity,
     sendVote,
-    clearActivity,
-    useMockData
+    reconnect,
+    toggleMockData: () => setUseMockData(!useMockData)
   };
 };
 

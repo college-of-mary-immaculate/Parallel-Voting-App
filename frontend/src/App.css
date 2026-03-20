@@ -1,42 +1,133 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* Modern Voting App Styles */
+body {
+  margin: 0;
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+* {
+  box-sizing: border-box;
 }
 
-@keyframes logo-spin {
+/* Smooth transitions */
+.MuiCard-root {
+  transition: all 0.3s ease;
+}
+
+.MuiCard-root:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Loading animation */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.loading-pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(45deg, #1976d2, #dc004e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glassmorphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .MuiGrid-item {
+    padding: 8px;
+  }
+  
+  .MuiCard-root {
+    margin-bottom: 16px;
+  }
+}
+
+/* Custom animations */
+@keyframes slideIn {
   from {
-    transform: rotate(0deg);
+    transform: translateY(20px);
+    opacity: 0;
   }
   to {
-    transform: rotate(360deg);
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.slide-in {
+  animation: slideIn 0.5s ease-out;
 }
 
-.card {
-  padding: 2em;
+/* Button hover effects */
+.MuiButton-root:hover {
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
 }
 
-.read-the-docs {
-  color: #888;
+/* Status indicators */
+.status-active {
+  color: #2e7d32;
+  background-color: rgba(46, 125, 50, 0.1);
+}
+
+.status-completed {
+  color: #1565c0;
+  background-color: rgba(21, 101, 192, 0.1);
+}
+
+.status-pending {
+  color: #ed6c02;
+  background-color: rgba(237, 108, 2, 0.1);
+}
+
+/* Custom shadows */
+.shadow-soft {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.shadow-medium {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.shadow-strong {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
 }

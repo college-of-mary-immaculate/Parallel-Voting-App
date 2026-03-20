@@ -1,120 +1,248 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, Card, Card, CardContent, Typography, LinearProgress, Box } from '@mui/material';
-import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { 
+  Grid, 
+  Card, 
+  CardContent, 
+  Typography, 
+  LinearProgress, 
+  Box,
+  Paper,
+  Avatar,
+  Chip,
+  IconButton,
+  Tooltip
+} from '@mui/material';
+import { 
+  TrendingUp, 
+  People, 
+  HowToVote, 
+  Schedule, 
+  Refresh,
+  Assessment,
+  BarChart,
+  PieChart,
+  Timeline
+} from '@mui/icons-material';
 
-const VotingDashboard = () => {
-  const [elections, setElections] = useState([]);
+const VotingDashboard = ({ elections = [] }) => {
+  const [selectedElection, setSelectedElection] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    // Mock data - in real app, fetch from backend
-    const mockElections = [
-      {
-        id: 1,
-        title: 'Student Council Election 2024',
-        description: 'Election for student council representatives',
-        status: 'active',
-        startTime: '2024-03-20T09:00:00',
-        endTime: '2024-03-20T17:00:00',
-        candidates: [
-          { id: 1, name: 'Alice Johnson', party: 'Independent', votes: 150 },
-          { id: 2, name: 'Bob Smith', party: 'Democratic', votes: 120 },
-          { id: 3, name: 'Charlie Davis', party: 'Green', votes: 95 }
-        ],
-        totalVotes: 365
-      },
-      {
-        id: 2,
-        title: 'Technology Committee Election 2024',
-        description: 'Election for technology committee members',
-        status: 'completed',
-        startTime: '2024-02-15T10:00:00',
-        endTime: '2024-02-15T16:00:00',
-        candidates: [
-          { id: 1, name: 'David Lee', party: 'Tech', votes: 89 },
-          { id: 2, name: 'Eva Martinez', party: 'Tech', votes: 134 }
-        ],
-        totalVotes: 223
+  const totalElections = elections.length;
+  const activeElections = elections.filter(e => e.status === 'active').length;
+  const completedElections = elections.filter(e => e.status === 'completed').length;
+  const totalVotes = elections.reduce((sum, e) => sum + (e.totalVotes || 0), 0);
+  const totalCandidates = elections.reduce((sum, e) => sum + (e.candidates?.length || 0), 0);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1000);
+  };
+
+  const StatCard = ({ title, value, icon, color, subtitle }) => (
+    <Card sx={{ 
+      p: 2, 
+      textAlign: 'center',
+      background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
+      color: 'white',
+      borderRadius: 3,
+      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+      transition: 'transform 0.2s',
+      '&:hover': {
+        transform: 'translateY(-2px)',
       }
-    ];
-    setElections(mockElections);
-  }, []);
+    }}>
+      <Avatar sx={{ 
+        bgcolor: 'rgba(255,255,255,0.2)', 
+        color: 'white',
+        width: 56,
+        height: 56,
+        mx: 'auto',
+        mb: 2
+      }}>
+        {icon}
+      </Avatar>
+      <Typography variant="h4" fontWeight="bold" sx={{ mb: 0.5 }}>
+        {value}
+      </Typography>
+      <Typography variant="body2" sx={{ opacity: 0.9 }}>
+        {title}
+      </Typography>
+      {subtitle && (
+        <Typography variant="caption" sx={{ opacity: 0.8, mt: 0.5, display: 'block' }}>
+          {subtitle}
+        </Typography>
+      )}
+    </Card>
+  );
 
-  const totalVotes = elections.reduce((sum, election) => sum + election.totalVotes, 0);
+  const ElectionProgress = ({ election }) => {
+    const totalVotes = election.totalVotes || 0;
+    const maxVotes = Math.max(...(election.candidates?.map(c => c.votes || 0) || [0]));
+    const progress = maxVotes > 0 ? (maxVotes / totalVotes) * 100 : 0;
+    
+    return (
+      <Paper sx={{ p: 2, borderRadius: 2, mb: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+            {election.title}
+          </Typography>
+          <Chip 
+            label={election.status?.toUpperCase() || 'UNKNOWN'}
+            color={election.status === 'active' ? 'success' : election.status === 'completed' ? 'default' : 'warning'}
+            size="small"
+          />
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            Total Votes: {totalVotes}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Candidates: {election.candidates?.length || 0}
+          </Typography>
+        </Box>
+        <LinearProgress 
+          variant="determinate" 
+          value={progress}
+          sx={{ 
+            height: 8, 
+            borderRadius: 4,
+            bgcolor: 'grey.200',
+            '& .MuiLinearProgress-bar': {
+              borderRadius: 4,
+            }
+          }}
+        />
+      </Paper>
+    );
+  };
 
   return (
-    <Box sx={{ p: 3, flexGrow: 1 }}>
-      <Typography variant="h4" component="h2" gutterBottom={2}>
-        Voting Dashboard
-      </Typography>
-      
+    <Box>
+      {/* Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Assessment />
+          Live Voting Dashboard
+        </Typography>
+        <Tooltip title="Refresh Dashboard">
+          <IconButton onClick={handleRefresh} disabled={refreshing}>
+            <Refresh />
+          </IconButton>
+        </Tooltip>
+      </Box>
+
+      {/* Stats Cards */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard 
+            title="Total Elections" 
+            value={totalElections}
+            icon={<BarChart />}
+            color="#1976d2"
+            subtitle={`${activeElections} active`}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard 
+            title="Total Votes Cast" 
+            value={totalVotes}
+            icon={<HowToVote />}
+            color="#2e7d32"
+            subtitle={`Across ${completedElections} completed`}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard 
+            title="Total Candidates" 
+            value={totalCandidates}
+            icon={<People />}
+            color="#ed6c02"
+            subtitle={`Avg: ${totalElections > 0 ? Math.round(totalCandidates / totalElections) : 0} per election`}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard 
+            title="Completion Rate" 
+            value={`${totalElections > 0 ? Math.round((completedElections / totalElections) * 100) : 0}%`}
+            icon={<PieChart />}
+            color="#d32f2f"
+            subtitle={`${completedElections} of ${totalElections} completed`}
+          />
+        </Grid>
+      </Grid>
+
+      {/* Elections Progress */}
       <Grid container spacing={3}>
-        {elections.map((election, index) => (
-          <Grid item xs={12} md={6} lg={4}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" component="h2">
-                  {election.title}
+        <Grid item xs={12} md={8}>
+          <Paper sx={{ p: 3, borderRadius: 2 }}>
+            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Timeline />
+              Election Progress
+            </Typography>
+            {elections.length > 0 ? (
+              elections.map((election) => (
+                <ElectionProgress key={election.id} election={election} />
+              ))
+            ) : (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Assessment sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                <Typography variant="body1" color="text.secondary">
+                  No elections data available
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  {election.description}
+              </Box>
+            )}
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 3, borderRadius: 2 }}>
+            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <TrendingUp />
+              Quick Stats
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  Active Elections
                 </Typography>
-                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body1">
-                    <strong>Status:</strong>
-                    <Chip 
-                      label={election.status} 
-                      color={election.status === 'active' ? 'success' : 'default'}
-                      size="small"
-                    />
-                    <span>Starts: {new Date(election.startTime).toLocaleString()}</span>
-                    <span>Ends: {new Date(election.endTime).toLocaleString()}</span>
-                  </Typography>
-                  <Typography variant="body1">
-                    <strong>Total Votes:</strong> {election.totalVotes || 0}
-                  </Typography>
-                </Box>
-                <Typography variant="body2" sx={{ mt: 2 }}>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={(election.totalVotes / 100) * 100} 
-                    sx={{ mb: 1 }}
-                  />
+                <Chip 
+                  label={activeElections}
+                  color="success"
+                  size="small"
+                  variant="outlined"
+                />
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  Completed Elections
                 </Typography>
-              </CardContent>
-              <CardActions>
-                <Button variant="outlined" size="small">
-                  View Details
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-      
-      <Grid item xs={12} md={6} lg={4}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" component="h2">
-              Total Votes Cast
-            </Typography>
-            <Typography variant="h3" component="h3">
-              {totalVotes.toLocaleString()}
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-      
-      <Grid item xs={12} md={6} lg={4}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" component="h2">
-              Active Elections
-            </Typography>
-            <Typography variant="body1">
-              {elections.filter(e => e.status === 'active').length} active elections
-            </Typography>
-          </CardContent>
-        </Card>
+                <Chip 
+                  label={completedElections}
+                  color="default"
+                  size="small"
+                  variant="outlined"
+                />
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  Avg Votes per Election
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  {totalElections > 0 ? Math.round(totalVotes / totalElections) : 0}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  Avg Candidates per Election
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  {totalElections > 0 ? Math.round(totalCandidates / totalElections) : 0}
+                </Typography>
+              </Box>
+            </Box>
+          </Paper>
+        </Grid>
       </Grid>
     </Box>
   );

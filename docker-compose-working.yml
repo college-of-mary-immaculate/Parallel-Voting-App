@@ -81,7 +81,7 @@ services:
     depends_on:
       - mysql_master
       - redis
-    command: sh -c "cd /app && npm install && node backend/index-cluster.js"
+    command: sh -c "cd /app && node backend/index-cluster.js"
 
   # Slave Application Server 1 (Subscriber)
   voting_app2:
@@ -114,7 +114,7 @@ services:
     depends_on:
       - mysql_master
       - redis
-    command: sh -c "cd /app && npm install && node backend/index-cluster.js"
+    command: sh -c "cd /app && node backend/index-cluster.js"
 
   # Slave Application Server 2 (Subscriber)
   voting_app3:
@@ -147,7 +147,7 @@ services:
     depends_on:
       - mysql_master
       - redis
-    command: sh -c "cd /app && npm install && node backend/index-cluster.js"
+    command: sh -c "cd /app && node backend/index-cluster.js"
 
 networks:
   voting-network:
