@@ -33,9 +33,22 @@ const {
   writeOperationInvalidation,
   cacheStats
 } = require('./src/middleware/cacheMiddleware');
+const {
+  globalErrorHandler,
+  notFoundHandler,
+  setupGlobalErrorHandlers,
+  asyncErrorHandler
+} = require('./src/middleware/errorHandler');
+const errorMonitor = require('./src/utils/errorMonitor');
 
 // Load environment variables
 dotenv.config();
+
+// Setup global error handlers
+setupGlobalErrorHandlers();
+
+// Start error monitoring
+errorMonitor.startMonitoring();
 
 const app = express();
 const PORT = process.env.API_PORT || 5000;
@@ -195,24 +208,56 @@ app.use('/api/v2/analytics', versionedAnalyticsRouter.getRouter('v2'));
 // Create optimization routes
 createOptimizationRoutes(app);
 
-// Error handling middleware
-app.use(errorAudit);
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+// Health check endpoint with error monitoring data
+app.get('/api/health', asyncErrorHandler(async (req, res) => {
+  const dashboardData = errorMonitor.getDashboardData();
+  
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    service: 'Parallel Voting App API',
+    version: '1.0.0',
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    environment: process.env.NODE_ENV || 'development',
+    errorMonitoring: {
+      enabled: true,
+      recentErrors: dashboardData.summary.totalErrors,
+      errorRate: dashboardData.summary.errorRate,
+      lastAlerts: dashboardData.alerts.lastAlerts
+    },
+    documentation: {
+      swagger: '/api-docs',
+      swaggerJson: '/api-docs.json'
+    },
+    endpoints: {
+      authentication: '/api/auth',
+      elections: '/api/elections',
+      candidates: '/api/candidates',
+      voting: '/api/votes',
+      analytics: '/api/analytics',
+      admin: '/api/admin',
+      export: '/api/export',
+      cache: '/api/cache'
+    }
   });
-});
+}));
+
+// Error monitoring dashboard endpoint
+app.get('/api/errors/dashboard', asyncErrorHandler(async (req, res) => {
+  const dashboardData = errorMonitor.getDashboardData();
+  res.json({
+    success: true,
+    data: dashboardData,
+    timestamp: new Date().toISOString()
+  });
+}));
 
 // 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found'
-  });
-});
+app.use(notFoundHandler);
+
+// Global error handler (must be last)
+app.use(globalErrorHandler);
 
 // Start server
 const startServer = async () => {
