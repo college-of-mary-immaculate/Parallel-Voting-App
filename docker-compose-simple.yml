@@ -1,0 +1,153 @@
+services:
+  # MySQL Database (single instance for now)
+  mysql:
+    image: mariadb:10.3
+    container_name: voting_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: voting_db
+      MYSQL_USER: voting_user
+      MYSQL_PASSWORD: voting_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db:/docker-entrypoint-initdb.d
+    networks:
+      - voting-network
+
+  # Redis for caching and session management
+  redis:
+    image: redis:7
+    container_name: voting_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - voting-network
+    command: redis-server --appendonly yes
+
+  # HAProxy Load Balancer
+  haproxy:
+    image: haproxy:2.8
+    container_name: voting_haproxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "8404:8404"  # Stats dashboard
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    networks:
+      - voting-network
+    depends_on:
+      - app_server1
+      - app_server2
+      - app_server3
+
+  # Application Server 1 (Publisher)
+  app_server1:
+    image: node:20-alpine
+    container_name: voting_app1
+    restart: unless-stopped
+    working_dir: /app
+    environment:
+      - NODE_ENV=production
+      - API_PORT=5000
+      - PUBLISHER=true
+      - PORT=3000
+      - SERVER_NAME=app_server1
+      - PORTS=app_server2:3001,app_server3:3002
+      - MASTER_DB_HOST=mysql
+      - MASTER_DB_USER=voting_user
+      - MASTER_DB_PASS=voting_password
+      - MASTER_DB_NAME=voting_db
+      - MASTER_DB_PORT=3306
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "3000:3000"
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    networks:
+      - voting-network
+    depends_on:
+      - mysql
+      - redis
+    command: ["sh", "-c", "cd /app && npm run api"]
+
+  # Application Server 2 (Subscriber)
+  app_server2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voting_app2
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - API_PORT=5001
+      - PUBLISHER=false
+      - PORT=3001
+      - SERVER_NAME=app_server2
+      - PORTS=app_server1:3000,app_server3:3002
+      - MASTER_DB_HOST=mysql
+      - MASTER_DB_USER=voting_user
+      - MASTER_DB_PASS=voting_password
+      - MASTER_DB_NAME=voting_db
+      - MASTER_DB_PORT=3306
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "3001:3001"
+      - "5001:5001"
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - voting-network
+    depends_on:
+      - mysql
+      - redis
+
+  # Application Server 3 (Subscriber)
+  app_server3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voting_app3
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - API_PORT=5002
+      - PUBLISHER=false
+      - PORT=3002
+      - SERVER_NAME=app_server3
+      - PORTS=app_server1:3000,app_server2:3001
+      - MASTER_DB_HOST=mysql
+      - MASTER_DB_USER=voting_user
+      - MASTER_DB_PASS=voting_password
+      - MASTER_DB_NAME=voting_db
+      - MASTER_DB_PORT=3306
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "3002:3002"
+      - "5002:5002"
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - voting-network
+    depends_on:
+      - mysql
+      - redis
+
+networks:
+  voting-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:

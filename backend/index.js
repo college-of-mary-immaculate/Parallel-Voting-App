@@ -1,45 +1,44 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const http = require('http');
-const { initializeSocket, setSocketInstance } = require('./src/config/socketConfig');
-const { requestLogger, errorAudit, requestId } = require('./src/middleware/auditMiddleware');
-const { startPeriodicCleanup } = require('./src/utils/tokenBlacklist');
-const { securityHeaders, validateContentType, validateRequestSize } = require('./src/middleware/validationMiddleware');
-const { 
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import http from 'http';
+import { initializeSocket, setSocketInstance } from './src/config/socketConfig.js';
+import { requestLogger, errorAudit, requestId } from './src/middleware/auditMiddleware.js';
+import { startPeriodicCleanup } from './src/utils/tokenBlacklist.js';
+import { 
   rateLimitMiddleware, 
   endpointRateLimit, 
   createRoleBasedRateLimit,
   rateLimitStats,
   initializeRateLimiting 
-} = require('./src/middleware/rateLimitMiddleware');
-const {
+} from './src/middleware/rateLimitMiddleware.js';
+import {
   databaseOptimizationMiddleware,
   performanceMonitoringMiddleware,
   cacheManagementMiddleware,
   createOptimizationRoutes
-} = require('./src/middleware/databaseOptimizationMiddleware');
-const {
+} from './src/middleware/databaseOptimizationMiddleware.js';
+import {
   apiVersioningMiddleware,
   versionValidationMiddleware,
   versionCompatibilityMiddleware,
   versionRateLimitingMiddleware,
   versionAnalyticsMiddleware
-} = require('./src/middleware/apiVersioningMiddleware');
-const {
+} from './src/middleware/apiVersioningMiddleware.js';
+import {
   staticDataCache,
   userDataCache,
   analyticsCache,
   writeOperationInvalidation,
   cacheStats
-} = require('./src/middleware/cacheMiddleware');
-const {
+} from './src/middleware/cacheMiddleware.js';
+import {
   globalErrorHandler,
   notFoundHandler,
   setupGlobalErrorHandlers,
   asyncErrorHandler
-} = require('./src/middleware/errorHandler');
-const errorMonitor = require('./src/utils/errorMonitor');
+} from './src/middleware/errorHandler.js';
+import errorMonitor from './src/utils/errorMonitor.js';
 
 // Load environment variables
 dotenv.config();
@@ -63,11 +62,8 @@ app.use(cors({
 }));
 
 // Security middleware
-app.use(securityHeaders);
-app.use(validateRequestSize('10mb'));
-
-// Initialize rate limiting
-initializeRateLimiting();
+// app.use(securityHeaders);
+// app.use(validateRequestSize('10mb'));
 
 // Apply general rate limiting
 app.use(rateLimitMiddleware.general);
@@ -76,30 +72,30 @@ app.use(rateLimitMiddleware.general);
 app.use(createRoleBasedRateLimit());
 
 // Performance monitoring middleware
-app.use(performanceMonitoringMiddleware.requestTiming);
-app.use(performanceMonitoringMiddleware.memoryMonitoring);
-app.use(performanceMonitoringMiddleware.cpuMonitoring);
+// app.use(performanceMonitoringMiddleware.requestTiming);
+// app.use(performanceMonitoringMiddleware.memoryMonitoring);
+// app.use(performanceMonitoringMiddleware.cpuMonitoring);
 
 // Database optimization middleware
-app.use(databaseOptimizationMiddleware.initialize);
-app.use(databaseOptimizationMiddleware.queryMonitor);
-app.use(databaseOptimizationMiddleware.cacheInvalidation);
-app.use(databaseOptimizationMiddleware.healthCheck);
+// app.use(databaseOptimizationMiddleware.initialize);
+// app.use(databaseOptimizationMiddleware.queryMonitor);
+// app.use(databaseOptimizationMiddleware.cacheInvalidation);
+// app.use(databaseOptimizationMiddleware.healthCheck);
 
 // Cache management middleware
-app.use(cacheManagementMiddleware.cacheStats);
-app.use(cacheManagementMiddleware.cacheControl);
-app.use(cacheManagementMiddleware.cacheWarmer);
+// app.use(cacheManagementMiddleware.cacheStats);
+// app.use(cacheManagementMiddleware.cacheControl);
+// app.use(cacheManagementMiddleware.cacheWarmer);
 
 // API versioning middleware
-app.use(apiVersioningMiddleware);
-app.use(versionValidationMiddleware);
-app.use(versionCompatibilityMiddleware);
-app.use(versionRateLimitingMiddleware);
-app.use(versionAnalyticsMiddleware);
+// app.use(apiVersioningMiddleware);
+// app.use(versionValidationMiddleware);
+// app.use(versionCompatibilityMiddleware);
+// app.use(versionRateLimitingMiddleware);
+// app.use(versionAnalyticsMiddleware);
 
 // Caching middleware
-app.use(cacheStats);
+// app.use(cacheStats);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -263,6 +259,7 @@ app.use(globalErrorHandler);
 const startServer = async () => {
   try {
     // Test database connection
+    const { testConnection } = require('./src/config/database');
     await testConnection();
     console.log('✅ Database connection successful');
 
@@ -298,6 +295,7 @@ process.on('SIGTERM', async () => {
   });
 
   // Close database connections
+  const { closeConnections } = require('./src/config/database');
   await closeConnections();
   console.log('🗄️ Database connections closed');
   
@@ -313,6 +311,7 @@ process.on('SIGINT', async () => {
   });
 
   // Close database connections
+  const { closeConnections } = require('./src/config/database');
   await closeConnections();
   console.log('🗄️ Database connections closed');
   

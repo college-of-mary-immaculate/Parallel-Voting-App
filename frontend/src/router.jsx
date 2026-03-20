@@ -1,26 +1,26 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import Layout from './components/Layout';
 import LoadingSpinner from './components/LoadingSpinner';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy loading components
-const Login = React.lazy(() => import('./pages/Login'));
-const Register = React.lazy(() => import('./pages/Register'));
-const Dashboard = React.lazy(() => import('./pages/Dashboard'));
-const Elections = React.lazy(() => import('./pages/Elections'));
-const Vote = React.lazy(() => import('./pages/Vote'));
-const Results = React.lazy(() => import('./pages/Results'));
-const RealTimeDashboard = React.lazy(() => import('./pages/RealTimeDashboard'));
-const Analytics = React.lazy(() => import('./pages/Analytics'));
-const DetailedAnalytics = React.lazy(() => import('./pages/DetailedAnalytics'));
-const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
-const ManageElections = React.lazy(() => import('./pages/ManageElections'));
-const ManageCandidates = React.lazy(() => import('./pages/ManageCandidates'));
-const ManageUsers = React.lazy(() => import('./pages/ManageUsers'));
-const AdminSettings = React.lazy(() => import('./pages/AdminSettings'));
-const VoteConfirmation = React.lazy(() => import('./pages/VoteConfirmation'));
-const UserProfile = React.lazy(() => import('./pages/UserProfile'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Elections = lazy(() => import('./pages/Elections'));
+const Vote = lazy(() => import('./pages/Vote'));
+const Results = lazy(() => import('./pages/Results'));
+const RealTimeDashboard = lazy(() => import('./pages/RealTimeDashboard'));
+const Analytics = lazy(() => import('./pages/Analytics'));
+const DetailedAnalytics = lazy(() => import('./pages/DetailedAnalytics'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const ManageElections = lazy(() => import('./pages/ManageElections'));
+const ManageCandidates = lazy(() => import('./pages/ManageCandidates'));
+const ManageUsers = lazy(() => import('./pages/ManageUsers'));
+const AdminSettings = lazy(() => import('./pages/AdminSettings'));
+const VoteConfirmation = lazy(() => import('./pages/VoteConfirmation'));
+const UserProfile = lazy(() => import('./pages/UserProfile'));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -47,6 +47,7 @@ const preloadRoutes = () => {
     import('./pages/Elections');
     import('./pages/Vote');
     import('./pages/Results');
+    import('./pages/Dashboard');
   }, 2000);
   
   setTimeout(() => {

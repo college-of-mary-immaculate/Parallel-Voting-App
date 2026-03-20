@@ -28,4 +28,4 @@ const query = async (sql, params) => {
   return [];
 };
 
-module.exports = { query };
+export { query };

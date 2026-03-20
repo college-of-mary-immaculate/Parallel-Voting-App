@@ -1,5 +1,5 @@
-const Redis = require('ioredis');
-const { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } = require('./auditLogger');
+import Redis from 'ioredis';
+import { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } from './auditLogger.js';
 
 // Caching Configuration
 const CACHING_CONFIG = {
@@ -1402,7 +1402,7 @@ class CacheManager {
 // Create singleton instance
 const cacheManager = new CacheManager();
 
-module.exports = {
+export {
   CacheManager,
   MemoryCache,
   RedisCache,

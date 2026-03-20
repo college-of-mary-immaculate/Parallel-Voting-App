@@ -122,7 +122,7 @@ const useElectionStore = create((set, get) => ({
 
   // Initialize store
   initializeStore: async () => {
-    await fetchElections();
+    await get().fetchElections();
   }
 }));
 

@@ -176,6 +176,7 @@ services:
       - SLAVE_DB_PORT=3306
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+    command: sh -c "cd /app && npm install && node backend/index-cluster.js"
     ports:
       - "3001:3001"
       - "5001:5001"
@@ -214,6 +215,7 @@ services:
       - SLAVE_DB_PORT=3306
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+    command: sh -c "cd /app && npm install && node backend/index-cluster.js"
     ports:
       - "3002:3002"
       - "5002:5002"

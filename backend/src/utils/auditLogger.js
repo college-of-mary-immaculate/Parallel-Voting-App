@@ -1,5 +1,5 @@
-const crypto = require('crypto');
-const { query } = require('../config/mockDatabase');
+import crypto from 'crypto';
+import { query } from '../config/mockDatabase.js';
 
 /**
  * Comprehensive Audit Logging System
@@ -853,7 +853,7 @@ const cleanupAuditLogs = async () => {
   }
 };
 
-module.exports = {
+export {
   createAuditLog,
   logAuthEvent,
   logUserEvent,

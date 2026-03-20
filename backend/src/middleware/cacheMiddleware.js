@@ -1,5 +1,5 @@
-const { cacheManager, CACHING_CONFIG } = require('../utils/cacheManager');
-const { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } = require('../utils/auditLogger');
+import { cacheManager, CACHING_CONFIG } from '../utils/cacheManager.js';
+import { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } from '../utils/auditLogger.js';
 
 // Cache Middleware Factory
 const createCacheMiddleware = (options = {}) => {
@@ -686,7 +686,7 @@ const cacheHealth = createCacheHealthMiddleware({
   detailed: false
 });
 
-module.exports = {
+export {
   createCacheMiddleware,
   createCacheInvalidationMiddleware,
   createCacheTaggingMiddleware,

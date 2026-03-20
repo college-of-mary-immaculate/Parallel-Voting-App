@@ -113,6 +113,13 @@ const RATE_LIMIT_CONFIG = {
       windowMs: 60 * 60 * 1000, // 1 hour
       max: 10, // 10 exports per hour per user
       message: 'Export limit exceeded, please try again later'
+    },
+    
+    // Email limits per user
+    email: {
+      windowMs: 60 * 60 * 1000, // 1 hour
+      max: 50, // 50 email requests per hour
+      message: 'Too many email requests, please try again later'
     }
   },
   
