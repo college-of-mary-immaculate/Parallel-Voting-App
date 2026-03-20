@@ -3,8 +3,6 @@
 server-id = 2
 relay-log = relay-bin
 read-only = 1
-gtid-mode = ON
-enforce-gtid-consistency = true
 
 # Performance settings
 max_connections = 1000

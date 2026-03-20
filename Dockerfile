@@ -1,11 +1,11 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Set working directory
 WORKDIR /app
 
 # Install dependencies
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 # Copy source code
 COPY . .
@@ -14,7 +14,7 @@ COPY . .
 RUN mkdir -p logs
 
 # Build frontend
-RUN cd frontend && npm ci && npm run build
+RUN cd frontend && npm ci && npm install terser && npm run build
 
 # Expose ports
 EXPOSE 3000 5000
