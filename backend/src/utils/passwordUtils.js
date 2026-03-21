@@ -1,4 +1,6 @@
-const bcrypt = require('bcrypt');
+// const bcrypt = require('bcrypt');
+
+import bcrypt from "bcrypt";
 
 /**
  * Hash password using bcrypt
@@ -64,7 +66,7 @@ const validatePasswordStrength = (password) => {
   };
 };
 
-module.exports = {
+export {
   hashPassword,
   comparePassword,
   generateRandomPassword,

@@ -1,11 +1,20 @@
-const { query } = require('../config/mockDatabase');
-const { 
+// const { query } = require('../config/mockDatabase');
+// const { 
+//   emitElectionStatusChange, 
+//   emitElectionCreated, 
+//   emitElectionDeleted,
+//   emitElectionStart,
+//   emitElectionEnd
+// } = require('./socketUtils');
+
+import { query } from "../config/mockDatabase.js";
+import { 
   emitElectionStatusChange, 
   emitElectionCreated, 
   emitElectionDeleted,
   emitElectionStart,
   emitElectionEnd
-} = require('./socketUtils');
+} from "./socketUtils.js";
 
 /**
  * Election Utilities
@@ -483,7 +492,7 @@ const getElectionsByUser = async (userId, filters = {}) => {
   }
 };
 
-module.exports = {
+export {
   createElection,
   getAllElections,
   getElectionById,

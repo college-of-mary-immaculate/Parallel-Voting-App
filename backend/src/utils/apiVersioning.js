@@ -1,4 +1,5 @@
-const { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } = require('./auditLogger');
+//const { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } = require('./auditLogger');
+import { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } from "./auditLogger.js";
 
 // API Versioning Configuration
 const API_VERSIONING_CONFIG = {
@@ -507,7 +508,7 @@ const createVersionedError = (res, error, statusCode = 500) => {
   return versionManager.createVersionedError(res, error, version, statusCode);
 };
 
-module.exports = {
+export {
   versionManager,
   createVersionMiddleware,
   createFeatureMiddleware,

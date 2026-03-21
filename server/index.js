@@ -9,7 +9,9 @@ import { fileURLToPath } from 'url';
 
 // Import existing backend functionality
 import { initializeSocket, broadcastToElection, broadcastToAll } from '../backend/src/config/socketConfig.js';
+//import socketConfig from "../backend/src/config/socketConfig.js";
 
+//const { initializeSocket, broadcastToElection, broadcastToAll } = socketConfig;
 // Import error handling
 import { 
   globalErrorHandler, 
@@ -26,25 +28,34 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const server = createServer(app);
 
+// const redisClient1 = createClient({ url: `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}` });
+// const redisClient2 = createClient({ url: `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}` });
+
+// await redisClient1.connect();
+// await redisClient2.connect();
+
 // Initialize Socket.io with enhanced configuration
-const io = new Server(server, {
-  cors: {
-    origin: process.env.HOST || "http://localhost:3000",
-    methods: ["GET", "POST"],
-    credentials: true
-  },
-  transports: ['websocket', 'polling'],
-  adapter: require('socket.io-redis-adapter')(
-    require('redis').createClient({ url: `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}` }),
-    require('redis').createClient({ url: `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}` })
-  )
-});
+// const io = new Server(server, {
+//   cors: {
+//     origin: process.env.HOST || "http://localhost:3000",
+//     methods: ["GET", "POST"],
+//     credentials: true
+//   },
+//   transports: ['websocket', 'polling'],
+//   adapter: createAdapter(redisClient1, redisClient2)
+//   // adapter: require('socket.io-redis-adapter')(
+//   //   require('redis').createClient({ url: `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}` }),
+//   //   require('redis').createClient({ url: `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}` })
+//   // )
+// });
 
 // Setup global error handlers
 setupGlobalErrorHandlers();
 
 // Start error monitoring
-errorMonitor.start();
+errorMonitor.startMonitoring();
+
+app.use(express.static(path.join(__dirname, 'frontend/dist')));
 
 // Middleware
 app.use(cors({
@@ -53,11 +64,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../dist')));
-
-// Error handling middleware
-app.use(notFoundHandler);
-app.use(globalErrorHandler);
+// app.use(express.static(path.join(__dirname, '../dist')));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -71,22 +78,46 @@ app.get('/health', (req, res) => {
 });
 
 // Serve frontend in production
-if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist/index.html'));
-  });
-}
+// if (process.env.NODE_ENV === 'production') {
+//   app.get(/^\/.*$/, (req, res) => {
+//     res.sendFile(path.join(__dirname, '../dist/index.html'));
+//   });
+// }
+app.get(/^\/.*$/, (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend/dist', 'index.html'));
+});
+
+// Error handling middleware
+app.use(notFoundHandler);
+app.use(globalErrorHandler);
 
 // Enhanced Socket.io setup with publisher-subscriber pattern
-let subscriberSocket = null;
+// let subscriberSocket = null;
 let isConnectedToPublisher = false;
 
 // Initialize socket with existing configuration
-const socketIo = initializeSocket(server);
+//const socketIo = initializeSocket(server);
+
+let io;
+let subscriberSocket;
+let socketIo;
 
 // Publisher-Subscriber Logic
 if (process.env.PUBLISHER === 'true') {
   console.log('🔴 Running as PUBLISHER');
+
+  // io = new Server(server, {
+  //   cors: {
+  //     origin: process.env.HOST || "http://localhost:3000",
+  //     methods: ["GET", "POST"],
+  //     credentials: true
+  //   },
+  //   transports: ['websocket', 'polling'],
+  //   adapter: createAdapter(redisClient1, redisClient2)
+  // });
+
+  socketIo = initializeSocket(server);
+
   
   // Publisher broadcasts to all subscribers
   socketIo.on('connection', (socket) => {
@@ -128,7 +159,18 @@ if (process.env.PUBLISHER === 'true') {
 } else {
   // Subscriber logic
   console.log('🔵 Running as SUBSCRIBER');
-  
+  io = new Server(server, {
+    cors: {
+      origin: process.env.HOST || "http://localhost:3000",
+      methods: ["GET", "POST"],
+      credentials: true
+    },
+    transports: ['websocket', 'polling']
+  });
+
+  socketIo = io;
+
+
   const portsList = process.env.PORTS.split(',').map(url => {
     const [host, port] = url.split(':');
     return { host, port };

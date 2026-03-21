@@ -1,6 +1,13 @@
-const { Server } = require('socket.io');
-const jwt = require('jsonwebtoken');
-const { verifyToken } = require('./jwtUtils');
+// const { Server } = require('socket.io');
+// const jwt = require('jsonwebtoken');
+// const { verifyToken } = require('./jwtUtils');
+
+import { Server } from 'socket.io';
+import jwt from "jsonwebtoken";
+import { verifyToken } from "./jwtUtils.js";
+import { createAdapter } from 'socket.io-redis-adapter';
+import { createClient } from 'redis';
+
 
 /**
  * Socket.io Server Configuration
@@ -16,6 +23,12 @@ const electionRooms = new Map();
 // Store active administrators
 const connectedAdmins = new Set();
 
+const redisClient1 = createClient({ url: `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}` });
+const redisClient2 = createClient({ url: `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}` });
+
+await redisClient1.connect();
+await redisClient2.connect();
+
 /**
  * Initialize Socket.io server
  */
@@ -26,7 +39,8 @@ const initializeSocket = (httpServer) => {
       methods: ["GET", "POST"],
       credentials: true
     },
-    transports: ['websocket', 'polling']
+    transports: ['websocket', 'polling'],
+    adapter: createAdapter(redisClient1, redisClient2)
   });
 
   // Socket authentication middleware
@@ -384,7 +398,7 @@ const getConnectedUsers = () => {
   }));
 };
 
-module.exports = {
+export {
   initializeSocket,
   notifyAdmins,
   broadcastToElection,

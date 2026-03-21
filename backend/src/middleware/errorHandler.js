@@ -1,5 +1,18 @@
-const errorLogger = require('../utils/errorLogger');
-const {
+// const errorLogger = require('../utils/errorLogger');
+// const {
+//   AppError,
+//   ValidationError,
+//   AuthenticationError,
+//   AuthorizationError,
+//   NotFoundError,
+//   ConflictError,
+//   RateLimitError,
+//   DatabaseError,
+//   ExternalServiceError
+// } = require('../utils/errorTypes');
+
+import errorLogger from '../utils/errorLogger.js';
+import {
   AppError,
   ValidationError,
   AuthenticationError,
@@ -9,7 +22,7 @@ const {
   RateLimitError,
   DatabaseError,
   ExternalServiceError
-} = require('../utils/errorTypes');
+} from "../utils/errorTypes.js";
 
 /**
  * Global Error Handler Middleware
@@ -316,7 +329,7 @@ const setupGlobalErrorHandlers = () => {
   process.on('unhandledRejection', handleUnhandledRejection);
 };
 
-module.exports = {
+export {
   globalErrorHandler,
   asyncErrorHandler,
   notFoundHandler,

@@ -1,5 +1,8 @@
-const validator = require('validator');
-const { createHash } = require('crypto');
+// const validator = require('validator');
+// const { createHash } = require('crypto');
+
+import validator from "validator";
+import { createHash } from crypto;
 
 // Validation configuration
 const VALIDATION_CONFIG = {
@@ -889,7 +892,7 @@ const getValidationErrorDetails = (error) => {
   };
 };
 
-module.exports = {
+export {
   validateString,
   validateEmail,
   validatePassword,

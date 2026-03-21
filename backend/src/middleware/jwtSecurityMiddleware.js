@@ -1,5 +1,8 @@
-const { jwtSecurityManager, tokenBlacklistManager, refreshRateLimiter, deviceTracker } = require('../utils/jwtSecurity');
-const { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } = require('../utils/auditLogger');
+// const { jwtSecurityManager, tokenBlacklistManager, refreshRateLimiter, deviceTracker } = require('../utils/jwtSecurity');
+// const { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } = require('../utils/auditLogger');
+
+import { jwtSecurityManager, tokenBlacklistManager, refreshRateLimiter, deviceTracker } from "../utils/jwtSecurity.js";
+import { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } from "../utils/auditLogger.js";
 
 // JWT Authentication Middleware
 const authenticateToken = (req, res, next) => {

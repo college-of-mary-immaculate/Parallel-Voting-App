@@ -1,4 +1,6 @@
-const jwt = require('jsonwebtoken');
+// const jwt = require('jsonwebtoken');
+
+import jwt from "jsonwebtoken";
 
 /**
  * JWT Utilities for authentication
@@ -113,7 +115,7 @@ const getTokenExpiration = (token) => {
   }
 };
 
-module.exports = {
+export {
   generateToken,
   verifyToken,
   decodeToken,

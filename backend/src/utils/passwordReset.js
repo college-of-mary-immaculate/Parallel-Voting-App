@@ -1,5 +1,8 @@
-const crypto = require('crypto');
-const { v4: uuidv4 } = require('uuid');
+// const crypto = require('crypto');
+// const { v4: uuidv4 } = require('uuid');
+
+import crypto from "crypto";
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * Generate password reset token
@@ -34,7 +37,7 @@ const generateTempPassword = () => {
   return crypto.randomBytes(16).toString('hex');
 };
 
-module.exports = {
+export {
   generateResetToken,
   verifyResetToken,
   generateTempPassword

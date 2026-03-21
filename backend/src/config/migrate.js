@@ -1,6 +1,10 @@
-const fs = require('fs');
-const path = require('path');
-const { query, initializeDatabase } = require('./database.js');
+// const fs = require('fs');
+// const path = require('path');
+// const { query, initializeDatabase } = require('./database.js');
+
+import fs from "fs";
+import path from "path";
+import { query, initializeDatabase } from "./database.js";
  
 const __filename = path.resolve(__filename);
 const __dirname = path.dirname(__filename);
@@ -186,7 +190,7 @@ const setupDatabase = async () => {
 };
  
 // Export functions for use in other modules
-module.exports = { runMigration, seedDatabase, setupDatabase };
+export { runMigration, seedDatabase, setupDatabase };
 
 // Run setup if this file is executed directly
 if (require.main === module) {

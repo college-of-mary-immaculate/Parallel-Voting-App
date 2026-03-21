@@ -40,6 +40,9 @@ import {
 } from './src/middleware/errorHandler.js';
 import errorMonitor from './src/utils/errorMonitor.js';
 
+import { testConnection } from "./src/config/database.js";
+import { closeConnections } from "./src/config/database.js";
+
 // Load environment variables
 dotenv.config();
 
@@ -123,33 +126,57 @@ app.use(requestId);
 app.use(requestLogger);
 
 // Basic route
-app.get('/', (req, res) => {
-  res.json({ 
-    message: 'Parallel Voting App API',
-    version: '1.0.0',
-    status: 'running'
-  });
-});
+// app.get('/', (req, res) => {
+//   res.json({ 
+//     message: 'Parallel Voting App API',
+//     version: '1.0.0',
+//     status: 'running'
+//   });
+// });
 
 // Import routes
-const authRoutes = require('./src/routes/authRoutes');
-const electionRoutes = require('./src/routes/electionRoutes');
-const candidateRoutes = require('./src/routes/candidateRoutes');
-const voteRoutes = require('./src/routes/voteRoutes');
-const secureVoteRoutes = require('./src/routes/secureVoteRoutes');
-const socketRoutes = require('./src/routes/socketRoutes');
-const realtimeRoutes = require('./src/routes/realtimeRoutes');
-const analyticsRoutes = require('./src/routes/analyticsRoutes');
-const adminRoutes = require('./src/routes/adminRoutes');
-const notificationRoutes = require('./src/routes/notificationRoutes');
-const securityRoutes = require('./src/routes/securityRoutes');
-const auditRoutes = require('./src/routes/auditRoutes');
-const exportRoutes = require('./src/routes/exportRoutes');
-const protectedRoutes = require('./src/routes/protectedRoutes');
-const jwtSecurityRoutes = require('./src/routes/jwtSecurityRoutes');
-const apiVersioningRoutes = require('./src/routes/apiVersioningRoutes');
-const cacheRoutes = require('./src/routes/cacheRoutes');
-const { versionedAuthRouter, versionedElectionRouter, versionedVoteRouter, versionedAnalyticsRouter } = require('./src/routes/versionedRouteExamples');
+// const authRoutes = require('./src/routes/authRoutes');
+// const electionRoutes = require('./src/routes/electionRoutes');
+// const candidateRoutes = require('./src/routes/candidateRoutes');
+// const voteRoutes = require('./src/routes/voteRoutes');
+// const secureVoteRoutes = require('./src/routes/secureVoteRoutes');
+// const socketRoutes = require('./src/routes/socketRoutes');
+// const realtimeRoutes = require('./src/routes/realtimeRoutes');
+// const analyticsRoutes = require('./src/routes/analyticsRoutes');
+// const adminRoutes = require('./src/routes/adminRoutes');
+// const notificationRoutes = require('./src/routes/notificationRoutes');
+// const securityRoutes = require('./src/routes/securityRoutes');
+// const auditRoutes = require('./src/routes/auditRoutes');
+// const exportRoutes = require('./src/routes/exportRoutes');
+// const protectedRoutes = require('./src/routes/protectedRoutes');
+// const jwtSecurityRoutes = require('./src/routes/jwtSecurityRoutes');
+// const apiVersioningRoutes = require('./src/routes/apiVersioningRoutes');
+// const cacheRoutes = require('./src/routes/cacheRoutes');
+// const { versionedAuthRouter, versionedElectionRouter, versionedVoteRouter, versionedAnalyticsRouter } = require('./src/routes/versionedRouteExamples');
+
+import authRoutes from './src/routes/authRoutes.js';
+import electionRoutes from './src/routes/electionRoutes.js';
+import candidateRoutes from './src/routes/candidateRoutes.js';
+import voteRoutes from './src/routes/voteRoutes.js';
+import secureVoteRoutes from './src/routes/secureVoteRoutes.js';
+import socketRoutes from './src/routes/socketRoutes.js';
+import realtimeRoutes from './src/routes/realtimeRoutes.js';
+import analyticsRoutes from './src/routes/analyticsRoutes.js';
+import adminRoutes from './src/routes/adminRoutes.js';
+import notificationRoutes from './src/routes/notificationRoutes.js';
+import securityRoutes from './src/routes/securityRoutes.js';
+import auditRoutes from './src/routes/auditRoutes.js';
+import exportRoutes from './src/routes/exportRoutes.js';
+import protectedRoutes from './src/routes/protectedRoutes.js';
+import jwtSecurityRoutes from './src/routes/jwtSecurityRoutes.js';
+import apiVersioningRoutes from './src/routes/apiVersioningRoutes.js';
+import cacheRoutes from './src/routes/cacheRoutes.js';
+import { 
+  versionedAuthRouter, 
+  versionedElectionRouter, 
+  versionedVoteRouter, 
+  versionedAnalyticsRouter 
+} from './src/routes/versionedRouteExamples.js';
 
 // Apply specific rate limiting to routes
 app.use('/api/auth', endpointRateLimit['/api/auth/login']);
@@ -259,7 +286,7 @@ app.use(globalErrorHandler);
 const startServer = async () => {
   try {
     // Test database connection
-    const { testConnection } = require('./src/config/database');
+    //const { testConnection } = require('./src/config/database');
     await testConnection();
     console.log('✅ Database connection successful');
 
@@ -295,7 +322,7 @@ process.on('SIGTERM', async () => {
   });
 
   // Close database connections
-  const { closeConnections } = require('./src/config/database');
+  // const { closeConnections } = require('./src/config/database');
   await closeConnections();
   console.log('🗄️ Database connections closed');
   
@@ -311,7 +338,7 @@ process.on('SIGINT', async () => {
   });
 
   // Close database connections
-  const { closeConnections } = require('./src/config/database');
+  //const { closeConnections } = require('./src/config/database');
   await closeConnections();
   console.log('🗄️ Database connections closed');
   
@@ -321,4 +348,4 @@ process.on('SIGINT', async () => {
 // Start the server
 startServer();
 
-module.exports = app;
+export default app;

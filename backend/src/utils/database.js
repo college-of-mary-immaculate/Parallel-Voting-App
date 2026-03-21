@@ -1,4 +1,5 @@
-const { query, transaction } = require('../config/database.js');
+// const { query, transaction } = require('../config/database.js');
+import { query, transaction } from "../config/mockDatabase.js";
 
 // Generic CRUD operations
 const DatabaseUtils = {
@@ -150,7 +151,7 @@ const validateDatabaseSetup = async () => {
   };
 };
 
-module.exports = {
+export {
   DatabaseUtils,
   checkDatabaseHealth,
   getTableStats,

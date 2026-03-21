@@ -1,5 +1,5 @@
-const { query } = require('../config/mockDatabase');
-
+// const { query } = require('../config/mockDatabase');
+import { query } from "../config/mockDatabase.js";
 /**
  * Admin Dashboard Utilities
  * Provides comprehensive admin functionality for user management, election control, and monitoring
@@ -849,7 +849,7 @@ const getVotingReport = async () => {
   }
 };
 
-module.exports = {
+export {
   getAdminDashboard,
   getUserManagement,
   getElectionManagement,

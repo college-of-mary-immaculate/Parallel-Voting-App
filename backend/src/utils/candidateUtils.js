@@ -1,4 +1,5 @@
-const { query } = require('../config/mockDatabase');
+// const { query } = require('../config/mockDatabase');
+import { query } from "../config/mockDatabase.js";
 
 /**
  * Candidate Utilities
@@ -522,7 +523,7 @@ const getCandidateStats = async (candidateId) => {
   }
 };
 
-module.exports = {
+export {
   createCandidate,
   getAllCandidates,
   getCandidateById,

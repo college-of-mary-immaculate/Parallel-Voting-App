@@ -1,10 +1,14 @@
-const { 
-  versionManager, 
-  createVersionMiddleware, 
-  createFeatureMiddleware 
-} = require('../utils/apiVersioning');
-const { validateVersion, requireFeature, VersionedResponse } = require('../utils/versionedRoutes');
-const { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } = require('../utils/auditLogger');
+// const { 
+//   versionManager, 
+//   createVersionMiddleware, 
+//   createFeatureMiddleware 
+// } = require('../utils/apiVersioning');
+// const { validateVersion, requireFeature, VersionedResponse } = require('../utils/versionedRoutes');
+// const { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } = require('../utils/auditLogger');
+
+import { versionManager, createVersionMiddleware, createFeatureMiddleware } from "../utils/apiVersioning.js";
+import { validateVersion, requireFeature, VersionedResponse } from "../utils/versionedRoutes.js";
+import { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } from "../utils/auditLogger.js";
 
 // API Versioning Middleware
 const apiVersioningMiddleware = createVersionMiddleware({

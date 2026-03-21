@@ -1,12 +1,22 @@
-const { query } = require('../config/mockDatabase');
-const { 
+// const { query } = require('../config/mockDatabase');
+// const { 
+//   emitVoteCast, 
+//   emitResultsUpdate, 
+//   emitVoteDeleted,
+//   emitElectionStart,
+//   emitElectionEnd
+// } = require('./socketUtils');
+// const { validateVote, validateVoteDeletion } = require('./voteValidation');
+
+import { query } from "../config/mockDatabase.js";
+import { 
   emitVoteCast, 
   emitResultsUpdate, 
   emitVoteDeleted,
   emitElectionStart,
   emitElectionEnd
-} = require('./socketUtils');
-const { validateVote, validateVoteDeletion } = require('./voteValidation');
+} from "./socketUtils.js";
+import { validateVote, validateVoteDeletion } from "./voteValidation.js";
 
 /**
  * Vote Utilities
@@ -612,7 +622,7 @@ const getVotingStats = async (electionId) => {
   }
 };
 
-module.exports = {
+export {
   castVote,
   getAllVotes,
   getVoteById,

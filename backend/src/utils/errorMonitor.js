@@ -1,6 +1,10 @@
-const errorLogger = require('./errorLogger');
-const fs = require('fs');
-const path = require('path');
+// const errorLogger = require('./errorLogger');
+// const fs = require('fs');
+// const path = require('path');
+
+import errorLogger from './errorLogger.js';
+import fs from "fs";
+import path from 'path';
 
 /**
  * Error Monitoring and Alerting System
@@ -406,4 +410,5 @@ class ErrorMonitor {
 // Singleton instance
 const errorMonitor = new ErrorMonitor();
 
-module.exports = errorMonitor;
+//module.exports = errorMonitor;
+export default errorMonitor;

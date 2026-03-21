@@ -1,4 +1,15 @@
-const {
+// const {
+//   createRateLimitMiddleware,
+//   createUserRateLimitMiddleware,
+//   getRateLimitStats,
+//   resetRateLimit,
+//   resetUserRateLimit,
+//   blockIP,
+//   markIPSuspicious,
+//   RATE_LIMIT_CONFIG
+// } = require('../utils/rateLimiter');
+
+import {
   createRateLimitMiddleware,
   createUserRateLimitMiddleware,
   getRateLimitStats,
@@ -7,7 +18,7 @@ const {
   blockIP,
   markIPSuspicious,
   RATE_LIMIT_CONFIG
-} = require('../utils/rateLimiter');
+} from "../utils/rateLimiter.js";
 
 // Pre-configured rate limiting middleware
 const rateLimitMiddleware = {

@@ -1,9 +1,16 @@
-const { 
+// const { 
+//   notifyAdmins, 
+//   broadcastToElection, 
+//   broadcastToAll, 
+//   sendToUser 
+// } = require('../config/socketConfig');
+
+import { 
   notifyAdmins, 
   broadcastToElection, 
   broadcastToAll, 
   sendToUser 
-} = require('../config/socketConfig');
+} from "../config/socketConfig.js"; 
 
 /**
  * Socket.io Event Utilities
@@ -318,7 +325,7 @@ const emitError = (userId, errorType, message, details = {}) => {
   });
 };
 
-module.exports = {
+export {
   setSocketInstance,
   emitVoteCast,
   emitResultsUpdate,

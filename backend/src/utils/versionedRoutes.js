@@ -1,5 +1,8 @@
-const express = require('express');
-const { versionManager, createVersionedResponse, createVersionedError } = require('../utils/apiVersioning');
+// const express = require('express');
+// const { versionManager, createVersionedResponse, createVersionedError } = require('../utils/apiVersioning');
+
+import express from "express";
+import { versionManager, createVersionedResponse, createVersionedError } from "../utils/apiVersioning.js";
 
 // Versioned Router Factory
 class VersionedRouter {
@@ -418,7 +421,7 @@ const requireFeature = (feature, options = {}) => {
   };
 };
 
-module.exports = {
+export {
   VersionedRouter,
   VersionedRouteBuilder,
   VersionedResponse,

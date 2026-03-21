@@ -72,7 +72,7 @@ class ExternalServiceError extends AppError {
   }
 }
 
-module.exports = {
+export {
   AppError,
   ValidationError,
   AuthenticationError,

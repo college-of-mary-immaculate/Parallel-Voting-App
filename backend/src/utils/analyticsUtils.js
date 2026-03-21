@@ -1,4 +1,5 @@
-const { query } = require('../config/mockDatabase');
+//const { query } = require('../config/mockDatabase');
+import { query } from "../config/mockDatabase.js";
 
 /**
  * Election Results & Analytics Utilities
@@ -533,7 +534,7 @@ const getRealTimeAnalytics = async (electionId) => {
   }
 };
 
-module.exports = {
+export {
   getDetailedElectionResults,
   getVotingTimeline,
   getVoterDemographics,

@@ -1,7 +1,10 @@
-const { createHash } = require('crypto');
-const mysql = require('mysql2/promise');
-const { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } = require('./auditLogger');
+// const { createHash } = require('crypto');
+// const mysql = require('mysql2/promise');
+// const { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } = require('./auditLogger');
 
+import { createHash } from "crypto";
+import mysql from "mysql2/promise";
+import { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } from "./auditLogger.js";
 // Database optimization configuration
 const DB_OPTIMIZATION_CONFIG = {
   // Index configuration
@@ -786,7 +789,7 @@ const initializeDatabaseOptimization = async (connectionConfig) => {
   }
 };
 
-module.exports = {
+export {
   initializeDatabaseOptimization,
   initializeDatabase,
   getConnection,

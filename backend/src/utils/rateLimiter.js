@@ -1,5 +1,9 @@
-const { createHash } = require('crypto');
-const { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } = require('./auditLogger');
+// const { createHash } = require('crypto');
+// const { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } = require('./auditLogger');
+
+import { createHash } from "crypto";
+import { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } from "./auditLogger.js";
+
 
 // Rate limiting configuration
 const RATE_LIMIT_CONFIG = {
@@ -675,7 +679,7 @@ const initializeRateLimiting = () => {
   console.log(`📈 Max entries: ${RATE_LIMIT_CONFIG.storage.maxEntries}`);
 };
 
-module.exports = {
+export {
   createRateLimitMiddleware,
   createUserRateLimitMiddleware,
   getRateLimitStats,

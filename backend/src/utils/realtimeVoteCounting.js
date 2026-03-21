@@ -1,10 +1,18 @@
-const { query } = require('../config/mockDatabase');
-const { 
+// const { query } = require('../config/mockDatabase');
+// const { 
+//   emitRealTimeVoteCount,
+//   emitResultsUpdate,
+//   emitVotingStats,
+//   setSocketInstance
+// } = require('../utils/socketUtils');
+
+import { query } from "../config/mockDatabase.js";
+import { 
   emitRealTimeVoteCount,
   emitResultsUpdate,
   emitVotingStats,
   setSocketInstance
-} = require('../utils/socketUtils');
+} from "../utils/socketUtils.js";
 
 /**
  * Real-time Vote Counting Service
@@ -304,7 +312,7 @@ const initializeMultipleElections = async (electionIds) => {
   }
 };
 
-module.exports = {
+export {
   startRealTimeCounting,
   stopRealTimeCounting,
   updateVoteCounts,

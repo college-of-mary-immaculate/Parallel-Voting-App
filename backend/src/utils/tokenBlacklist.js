@@ -1,5 +1,5 @@
-const { verifyToken, decodeToken } = require('./jwtUtils');
-
+// const { verifyToken, decodeToken } = require('./jwtUtils');
+import { verifyToken, decodeToken } from "./jwtUtils.js";
 /**
  * Token Blacklist Utilities
  * Handles token blacklisting for secure logout functionality
@@ -220,7 +220,7 @@ const startPeriodicCleanup = () => {
   }, 60 * 60 * 1000); // 1 hour
 };
 
-module.exports = {
+export {
   blacklistToken,
   isTokenBlacklisted,
   removeFromBlacklist,

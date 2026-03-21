@@ -1,7 +1,14 @@
-const fs = require('fs');
-const path = require('path');
-const { v4: uuidv4 } = require('uuid');
+// const fs = require('fs');
+// const path = require('path');
+// const { v4: uuidv4 } = require('uuid');
 
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { v4 as uuidv4 } from "uuid";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 /**
  * Advanced Error Logging System
  * Provides structured logging with different levels and destinations
@@ -269,4 +276,4 @@ class ErrorLogger {
 // Singleton instance
 const errorLogger = new ErrorLogger();
 
-module.exports = errorLogger;
+export default errorLogger;

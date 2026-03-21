@@ -1,5 +1,8 @@
-const { query } = require('../config/mockDatabase');
-const { emitError } = require('./socketUtils');
+// const { query } = require('../config/mockDatabase');
+// const { emitError } = require('./socketUtils');
+
+import { query } from "../config/mockDatabase.js";
+import { emitError } from "./socketUtils.js";
 
 /**
  * Vote Validation Utilities
@@ -728,7 +731,7 @@ const getValidationErrorDetails = (validationError) => {
   };
 };
 
-module.exports = {
+export {
   validateUserEligibility,
   validateEligibilityCriteria,
   validateDuplicateVote,

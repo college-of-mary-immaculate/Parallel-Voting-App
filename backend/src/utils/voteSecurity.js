@@ -1,6 +1,10 @@
-const crypto = require('crypto');
-const { query } = require('../config/mockDatabase');
-const { sendVoteConfirmation } = require('./emailService');
+// const crypto = require('crypto');
+// const { query } = require('../config/mockDatabase');
+// const { sendVoteConfirmation } = require('./emailService');
+
+import crypto from "crypto";
+import { query } from "../config/mockDatabase.js";
+import { sendVoteConfirmation } from "./emailService.js";
 
 /**
  * Vote Verification & Security Utilities
@@ -621,7 +625,7 @@ const isIPBlocked = async (ipAddress) => {
   }
 };
 
-module.exports = {
+export {
   createVoteVerification,
   verifyVoteCode,
   checkSuspiciousActivity,

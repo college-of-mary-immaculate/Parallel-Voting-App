@@ -1,5 +1,19 @@
-const { v4: uuidv4 } = require('uuid');
-const {
+// const { v4: uuidv4 } = require('uuid');
+// const {
+//   createAuditLog,
+//   logAuthEvent,
+//   logUserEvent,
+//   logElectionEvent,
+//   logVotingEvent,
+//   logSecurityEvent,
+//   logSystemEvent,
+//   logAdminEvent,
+//   AUDIT_CATEGORIES,
+//   AUDIT_EVENTS
+// } = require('../utils/auditLogger');
+
+import { v4 as uuidv4 } from "uuid";
+import {
   createAuditLog,
   logAuthEvent,
   logUserEvent,
@@ -10,7 +24,7 @@ const {
   logAdminEvent,
   AUDIT_CATEGORIES,
   AUDIT_EVENTS
-} = require('../utils/auditLogger');
+} from "../utils/auditLogger.js";
 
 /**
  * Audit Middleware

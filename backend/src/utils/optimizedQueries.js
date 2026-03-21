@@ -1,4 +1,6 @@
-const { executeQuery, executeQueryWithExplain, cacheManager, DB_OPTIMIZATION_CONFIG } = require('./databaseOptimizer');
+// const { executeQuery, executeQueryWithExplain, cacheManager, DB_OPTIMIZATION_CONFIG } = require('./databaseOptimizer');
+
+import { executeQuery, executeQueryWithExplain, cacheManager, DB_OPTIMIZATION_CONFIG } from "./databaseOptimizer.js";
 
 // Optimized query templates
 const OPTIMIZED_QUERIES = {
@@ -580,7 +582,7 @@ const calculatePerformanceScore = (explainResults) => {
 // Create singleton instance
 const queryExecutor = new OptimizedQueryExecutor();
 
-module.exports = {
+export {
   queryExecutor,
   getPaginationParams,
   buildWhereClause,

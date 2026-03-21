@@ -120,3 +120,13 @@ logs
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
+
+
+master/
+slave1/
+slave2/
+slave3/
+
+redis/data/
+redis/data/dump.rdb
+redis/data/appendonlydir/

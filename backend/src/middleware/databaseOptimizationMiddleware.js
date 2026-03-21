@@ -1,10 +1,18 @@
-const { 
+// const { 
+//   initializeDatabaseOptimization, 
+//   performanceMonitor, 
+//   cacheManager,
+//   DB_OPTIMIZATION_CONFIG 
+// } = require('../utils/databaseOptimizer');
+// const { analyzeQueryPerformance } = require('../utils/optimizedQueries');
+
+import { 
   initializeDatabaseOptimization, 
   performanceMonitor, 
   cacheManager,
   DB_OPTIMIZATION_CONFIG 
-} = require('../utils/databaseOptimizer');
-const { analyzeQueryPerformance } = require('../utils/optimizedQueries');
+} from "../utils/databaseOptimizer.js";
+import { analyzeQueryPerformance } from "../utils/optimizedQueries.js";
 
 // Database optimization middleware
 const databaseOptimizationMiddleware = {

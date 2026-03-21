@@ -1,4 +1,23 @@
-const {
+// const {
+//   validateRequest,
+//   validateString,
+//   validateEmail,
+//   validatePassword,
+//   validateNumber,
+//   validateDate,
+//   validateBoolean,
+//   validateEnum,
+//   validateUUID,
+//   validatePattern,
+//   validateArray,
+//   validateObject,
+//   securityHeaders,
+//   rateLimit,
+//   validateContentType,
+//   validateRequestSize
+// } = require('../utils/validationService');
+
+import {
   validateRequest,
   validateString,
   validateEmail,
@@ -15,7 +34,7 @@ const {
   rateLimit,
   validateContentType,
   validateRequestSize
-} = require('../utils/validationService');
+} from "../utils/validationService.js";
 
 // Common validation schemas
 const COMMON_SCHEMAS = {

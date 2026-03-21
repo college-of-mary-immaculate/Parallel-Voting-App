@@ -1,5 +1,8 @@
-const nodemailer = require('nodemailer');
-const { query } = require('../config/mockDatabase');
+// const nodemailer = require('nodemailer');
+// const { query } = require('../config/mockDatabase');
+
+import nodemailer from "nodemailer";
+import { query } from "../config/mockDatabase.js";
 
 /**
  * Email Notification Service
@@ -1070,7 +1073,7 @@ const getElectionReminderSubject = (election, type) => {
   return subjects[type] || `Reminder: ${election.title}`;
 };
 
-module.exports = {
+export {
   initializeEmailService,
   sendVoteConfirmation,
   sendElectionAnnouncement,

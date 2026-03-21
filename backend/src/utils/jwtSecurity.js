@@ -1,7 +1,12 @@
-const jwt = require('jsonwebtoken');
-const { createHash, randomBytes } = require('crypto');
-const { executeQuery } = require('./databaseOptimizer');
-const { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } = require('./auditLogger');
+// const jwt = require('jsonwebtoken');
+// const { createHash, randomBytes } = require('crypto');
+// const { executeQuery } = require('./databaseOptimizer');
+// const { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } = require('./auditLogger');
+
+import jwt from "jsonwebtoken";
+import { createHash, randomBytes } from "crypto";
+import { executeQuery } from "./databaseOptimizer.js";
+import { logSecurityEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } from "./auditLogger.js";
 
 // JWT Security Configuration
 const JWT_SECURITY_CONFIG = {
@@ -713,7 +718,7 @@ class JWTSecurityManager {
 // Create singleton instance
 const jwtSecurityManager = new JWTSecurityManager();
 
-module.exports = {
+export {
   jwtSecurityManager,
   tokenBlacklistManager,
   refreshRateLimiter,

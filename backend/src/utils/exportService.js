@@ -1,9 +1,17 @@
-const fs = require('fs');
-const path = require('path');
-const { promisify } = require('util');
+// const fs = require('fs');
+// const path = require('path');
+// const { promisify } = require('util');
+// const writeFile = promisify(fs.writeFile);
+// const { mockDatabase } = require('../config/database');
+// const { logAdminEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } = require('./auditLogger');
+
+import fs from "fs";
+import path from "path";
+import { promisify } from "util";
 const writeFile = promisify(fs.writeFile);
-const { mockDatabase } = require('../config/database');
-const { logAdminEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } = require('./auditLogger');
+
+import { mockDatabase } from "../config/database.js";
+import { logAdminEvent, AUDIT_EVENTS, AUDIT_CATEGORIES } from "./auditLogger.js";
 
 // Export configuration
 const EXPORT_CONFIG = {
@@ -898,7 +906,7 @@ const cleanupOldExports = async () => {
   }
 };
 
-module.exports = {
+export {
   exportElectionResults,
   exportUserData,
   exportVotingData,

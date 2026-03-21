@@ -1,4 +1,15 @@
-const {
+// const {
+//   ValidationError,
+//   AuthenticationError,
+//   AuthorizationError,
+//   NotFoundError,
+//   ConflictError,
+//   RateLimitError,
+//   DatabaseError,
+//   ExternalServiceError
+// } = require('./errorTypes');
+
+import {
   ValidationError,
   AuthenticationError,
   AuthorizationError,
@@ -7,7 +18,7 @@ const {
   RateLimitError,
   DatabaseError,
   ExternalServiceError
-} = require('./errorTypes');
+} from "./errorTypes.js";
 
 /**
  * Error Handling Utilities
@@ -357,7 +368,7 @@ const validateVoteData = (voteData) => {
   });
 };
 
-module.exports = {
+export {
   handleDatabaseError,
   handleAuthError,
   handleAuthzError,

@@ -1,5 +1,9 @@
-const { verifyToken, extractTokenFromHeader, generateToken } = require('../utils/jwtUtils');
-const { isTokenBlacklisted } = require('../utils/tokenBlacklist');
+// const { verifyToken, extractTokenFromHeader, generateToken } = require('../utils/jwtUtils');
+// const { isTokenBlacklisted } = require('../utils/tokenBlacklist');
+
+import { verifyToken, extractTokenFromHeader, generateToken } from "../utils/jwtUtils.js";
+import { isTokenBlacklisted } from "../utils/tokenBlacklist.js";
+
 
 /**
  * Authentication Middleware
