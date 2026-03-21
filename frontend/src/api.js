@@ -1,102 +1,88 @@
-// API Configuration for Frontend
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost';
+const API_URL = 'http://localhost:5173/api'; // main API for auth
 
-// API endpoints
-export const API_ENDPOINTS = {
-  HEALTH: '/api/health',
-  LOGIN: '/api/auth/login',
-  VOTE: '/api/votes',
-  RESULTS: '/api/results',
-  ELECTIONS: '/api/elections'
-};
+function authHeaders() {
+    const token = localStorage.getItem('token');
+    return {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    };
+}
 
-// API functions
-export const api = {
-  // Health check
-  healthCheck: async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.HEALTH}`);
-      const data = await response.json();
-      console.log('✅ Backend health check:', data);
-      return { success: true, data };
-    } catch (error) {
-      console.error('❌ Backend health check failed:', error);
-      return { success: false, error: error.message };
-    }
-  },
+async function handleResponse(res) {
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || 'Request failed');
+    return data;
+}
 
-  // Elections
-  getAll: async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ELECTIONS}`);
-      const data = await response.json();
-      console.log('🚀 API Request: GET /elections', data);
-      return { success: true, data };
-    } catch (error) {
-      console.error('❌ API Error: GET /elections', error);
-      return { success: false, error: error.message };
-    }
-  },
-
-  getById: async (id) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ELECTIONS}/${id}`);
-      const data = await response.json();
-      return { success: true, data };
-    } catch (error) {
-      console.error('❌ API Error: GET /elections/:id', error);
-      return { success: false, error: error.message };
-    }
-  },
-
-  // Authentication
-  login: async (credentials) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LOGIN}`, {
+// ── Main API ─────────────────────────────────────────
+// Auth / login
+export async function loginRequest(email, password) {
+    const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-      const data = await response.json();
-      console.log('🚀 API Request: POST /auth/login', data);
-      return { success: response.ok, data };
-    } catch (error) {
-      console.error('❌ API Error: POST /auth/login', error);
-      return { success: false, error: error.message };
-    }
-  },
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+    });
+    return handleResponse(res);
+}
 
-  // Voting
-  vote: async (voteData) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.VOTE}`, {
+// ── Admin API ────────────────────────────────────────
+const ADMIN_API = `${API_URL}`;
+
+export async function getAdminElections() {
+    const res = await fetch(`${ADMIN_API}/elections`, { headers: authHeaders() });
+    return handleResponse(res);
+}
+
+export async function getAdminElectionDetails(id) {
+    const res = await fetch(`${ADMIN_API}/elections/${id}`, { headers: authHeaders() });
+    return handleResponse(res);
+}
+
+export async function getElectionResults(id) {
+    const res = await fetch(`${ADMIN_API}/elections/${id}/results`, { headers: authHeaders() });
+    return handleResponse(res);
+}
+
+export async function updateElectionStatus(id, status) {
+    const res = await fetch(`${ADMIN_API}/elections/${id}/status`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({ status })
+    });
+    return handleResponse(res);
+}
+
+export async function deleteElection(id) {
+    const res = await fetch(`${ADMIN_API}/elections/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders()
+    });
+    return handleResponse(res);
+}
+
+// ── Voter API ───────────────────────────────────────
+const VOTER_API = `${API_URL}/voter`;
+
+export async function getVoterElections() {
+    const res = await fetch(`${VOTER_API}/elections`, { headers: authHeaders() });
+    return handleResponse(res);
+}
+
+export async function getVoterElectionDetails(id) {
+    const res = await fetch(`${VOTER_API}/elections/${id}`, { headers: authHeaders() });
+    return handleResponse(res);
+}
+
+export async function castVote(electionId, votes) {
+    const res = await fetch(`${VOTER_API}/vote/${electionId}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(voteData),
-      });
-      const data = await response.json();
-      console.log('🚀 API Request: POST /votes', data);
-      return { success: response.ok, data };
-    } catch (error) {
-      console.error('❌ API Error: POST /votes', error);
-      return { success: false, error: error.message };
-    }
-  },
+        headers: authHeaders(),
+        body: JSON.stringify({ votes })
+    });
+    return handleResponse(res);
+}
 
-  // Results
-  getResults: async (electionId) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.RESULTS}${electionId ? `/${electionId}` : ''}`);
-      const data = await response.json();
-      console.log('🚀 API Request: GET /results', data);
-      return { success: true, data };
-    } catch (error) {
-      console.error('❌ API Error: GET /results', error);
-      return { success: false, error: error.message };
-    }
-  },
-};
+export async function getMyVotes() {
+    const res = await fetch(`${VOTER_API}/myvotes`, { headers: authHeaders() });
+    return handleResponse(res);
+}

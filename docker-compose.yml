@@ -1,221 +1,141 @@
 services:
-  mysql_master:
-    image: mariadb:10.3
-    env_file:
-      - ./master/mysql_master.env
-    container_name: "mysql_master"
-    restart: "no"
-    ports:
-      - 4406:3306
-    volumes:
-      - ./master/conf/mysql.conf.cnf:/etc/mysql/conf.d/mysql.conf.cnf
-      - ./master/data:/var/lib/mysql
-      - ./db:/db
-    networks:
-      - voting-network
-
-  mysql_slave1:
-    image: mariadb:10.3
-    env_file:
-      - ./slave1/mysql_slave1.env
-    container_name: "mysql_slave1"
-    restart: "no"
-    ports:
-      - 5506:3306
-    depends_on:
-      - mysql_master
-    volumes:
-      - ./slave1/conf/mysql.conf.cnf:/etc/mysql/conf.d/mysql.conf.cnf
-      - ./slave1/data:/var/lib/mysql
-      - ./db:/db
-    networks:
-      - voting-network
-
-  mysql_slave2:
-    image: mariadb:10.3
-    env_file:
-      - ./slave2/mysql_slave2.env
-    container_name: "mysql_slave2"
-    restart: "no"
-    ports:
-      - 5507:3306
-    depends_on:
-      - mysql_master
-    volumes:
-      - ./slave2/conf/mysql.conf.cnf:/etc/mysql/conf.d/mysql.conf.cnf
-      - ./slave2/data:/var/lib/mysql
-      - ./db:/db
-    networks:
-      - voting-network
-
-  mysql_slave3:
-    image: mariadb:10.3
-    env_file:
-      - ./slave3/mysql_slave3.env
-    container_name: "mysql_slave3"
-    restart: "no"
-    ports:
-      - 5508:3306
-    depends_on:
-      - mysql_master
-    volumes:
-      - ./slave3/conf/mysql.conf.cnf:/etc/mysql/conf.d/mysql.conf.cnf
-      - ./slave3/data:/var/lib/mysql
-      - ./db:/db
-    networks:
-      - voting-network
-  
-  app_server1:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: app_server1
-    restart: unless-stopped
+  db-master:
+    image: mysql:8
+    container_name: db-master
     environment:
-      - NODE_ENV=production
-      - API_PORT=5000
-      - PUBLISHER=true
-      - PORT=3000
-      - SERVER_NAME=app_server1
-      - MASTER_DB_HOST=mysql_master
-      - MASTER_DB_USER=mydb_user
-      - MASTER_DB_PASS=mydb_pwd
-      - MASTER_DB_NAME=mydb
-      - MASTER_DB_PORT=3306
-      - SLAVE_DB_HOST=mysql_slave1
-      - SLAVE_DB_USER=mydb_slave_user
-      - SLAVE_DB_PASS=mydb_slave_pwd
-      - SLAVE_DB_NAME=mydb
-      - SLAVE_DB_PORT=3306
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    ports:
-      - "3000:3000"
-      - "5000:5000"
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - ./logs:/app/logs
-    networks:
-      - voting-network
-    depends_on:
-      - mysql_master
-      - mysql_slave1
-      - mysql_slave2
-      - redis
+      - ./../db/master:/etc/mysql/conf.d
+      - db_master_data:/var/lib/mysql
 
-  # Application Server 2 (Subscriber)
-  app_server2:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: app_server2
-    restart: unless-stopped
+  db-slave1:
+    image: mysql:8
+    container_name: db-slave1
     environment:
-      - NODE_ENV=production
-      - API_PORT=5001
-      - PUBLISHER=false
-      - PORT=3001
-      - SERVER_NAME=app_server2
-      - PORTS=app_server1:3000
-      - MASTER_DB_HOST=mysql_master
-      - MASTER_DB_USER=mydb_user
-      - MASTER_DB_PASS=mydb_pass
-      - MASTER_DB_NAME=mydb
-      - MASTER_DB_PORT=3306
-      - SLAVE_DB_HOST=mysql_slave2
-      - SLAVE_DB_USER=mydb_slave_user
-      - SLAVE_DB_PASS=mydb_slave_pwd
-      - SLAVE_DB_NAME=mydb
-      - SLAVE_DB_PORT=3306
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    command: sh -c "cd /app && npm install && node backend/index-cluster.js"
-    ports:
-      - "3001:3001"
-      - "5001:5001"
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     volumes:
-      - ./logs:/app/logs
-    networks:
-      - voting-network
+      - ./../db/slave1:/etc/mysql/conf.d
+      - db_slave1_data:/var/lib/mysql
     depends_on:
-      - app_server1
-      - mysql_master
-      - mysql_slave1
-      - mysql_slave2
-      - redis
+      - db-master
 
-
-  # Application Server 3 (Subscriber)
-  app_server3:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: app_server3
-    restart: unless-stopped
+  db-slave2:
+    image: mysql:8
+    container_name: db-slave2
     environment:
-      - NODE_ENV=production
-      - API_PORT=5002
-      - PUBLISHER=false
-      - PORT=3002
-      - SERVER_NAME=app_server3
-      - PORTS=app_server1:3000
-      - MASTER_DB_HOST=mysql_master
-      - MASTER_DB_USER=mydb_user
-      - MASTER_DB_PASS=mydb_pwd
-      - MASTER_DB_NAME=mydb
-      - MASTER_DB_PORT=3306
-      - SLAVE_DB_HOST=mysql_slave3
-      - SLAVE_DB_USER=mydb_slave_user
-      - SLAVE_DB_PASS=mydb_slave_pwd
-      - SLAVE_DB_NAME=mydb
-      - SLAVE_DB_PORT=3306
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    command: sh -c "cd /app && npm install && node backend/index-cluster.js"
-    ports:
-      - "3002:3002"
-      - "5002:5002"
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     volumes:
-      - ./logs:/app/logs
-    networks:
-      - voting-network
+      - ./../db/slave2:/etc/mysql/conf.d
+      - db_slave2_data:/var/lib/mysql
     depends_on:
-      - app_server1
-      - mysql_master
-      - mysql_slave1
-      - mysql_slave2
-      - redis
-
+      - db-master
 
   redis:
     image: redis:7-alpine
-    container_name: voting_redis
-    restart: unless-stopped
+    container_name: redis
     ports:
       - "6379:6379"
-    volumes:
-      - ./redis/data:/data
-    networks:
-      - voting-network
-    command: redis-server --appendonly yes
+    restart: unless-stopped
 
-  loadbalancer:
-    build: ./haproxy
-    ports:
-      - 80:80
-      - 8404:8404
+  backend1:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend1
     depends_on:
-      - app_server1
-      - app_server2
-      - app_server3
-    networks:
-      - voting-network
+      - db-master
+      - redis
+    environment:
+      DB_HOST: db-master
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "3001:3000"
+    command: npm run dev
 
-networks:
-  voting-network:
-    driver: bridge
+  backend2:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend2
+    depends_on:
+      - db-master
+      - redis
+    environment:
+      DB_HOST: db-master
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "3002:3000"
+    command: npm run dev
+
+  backend3:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend3
+    depends_on:
+      - db-master
+      - redis
+    environment:
+      DB_HOST: db-master
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "3003:3000"
+    command: npm run dev
+
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: frontend-dev
+    depends_on:
+      - backend1
+      - backend2
+      - backend3
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      VITE_BACKEND_URL: http://backend1:3000
+    command: npm run dev -- --host
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    depends_on:
+      - frontend-dev
+      - backend1
+      - backend2
+      - backend3
+    ports:
+      - "5173:80"
 
 volumes:
-  master_data:
-  slave1_data:
-  slave2_data:
-  redis_data:
+  db_master_data:
+  db_slave1_data:
+  db_slave2_data:

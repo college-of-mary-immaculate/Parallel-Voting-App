@@ -1,0 +1,6 @@
+[mysqld]
+server-id=3
+relay-log=relay-bin
+log-bin=mysql-bin
+read-only=1
+binlog-do-db=votingdb
