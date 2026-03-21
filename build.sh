@@ -5,8 +5,10 @@ sudo rm -rf ./master/data/* ./master/data/.gitkeep
 sudo rm -rf ./slave1/data/* ./slave1/data/.gitkeep
 sudo rm -rf ./slave2/data/* ./slave2/data/.gitkeep
 sudo rm -rf ./slave3/data/* ./slave3/data/.gitkeep
-chmod 044 ./master/conf/mysql.conf.cnf
-chmod 044 ./slave1/conf/mysql.conf.cnf
+chmod 644 ./master/conf/mysql.conf.cnf
+chmod 644 ./slave1/conf/mysql.conf.cnf
+chmod 644 ./slave2/conf/mysql.conf.cnf
+chmod 644 ./slave3/conf/mysql.conf.cnf
 docker compose build
 docker compose up -d mysql_master mysql_slave1 mysql_slave2 mysql_slave3
 

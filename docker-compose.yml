@@ -203,10 +203,10 @@ services:
     ports:
       - 80:80
       - 8404:8404
-    # depends_on:
-    #   - socketserver1
-    #   - socketserver2
-    #   - socketserver3
+    depends_on:
+      - app_server1
+      - app_server2
+      - app_server3
     networks:
       - voting-network
 

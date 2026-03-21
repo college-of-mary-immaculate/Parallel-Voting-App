@@ -16,7 +16,7 @@ RUN npm install terser
 COPY frontend/ ./
 
 # Build frontend
-RUN npx vite build
+RUN VITE_API_BASE_URL=http://localhost:5000/api VITE_APP_NAME="Parallel Voting App" VITE_APP_VERSION="1.0.0" npm run build:prod
 
 # ----------------------------
 # 2. Setup backend
